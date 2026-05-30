@@ -84,6 +84,7 @@ model Visit {
   doctorId        String?
   doctor          Doctor?   @relation(fields: [doctorId], references: [id])
   nurseLogs       NurseLog[]
+  pharmacyRequests PharmacyRequest[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
@@ -108,4 +109,17 @@ model NurseLog {
   indications String   // Clinical indications
   loggedAt    DateTime @default(now()) // Timestamp when it was administered / reviewed
   createdAt   DateTime @default(now())
+}
+
+model PharmacyRequest {
+  id          String   @id @default(uuid())
+  visitId     String
+  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  nurseName   String   // The nurse who requested it
+  medicines   String   // Medications requested
+  status      String   @default("pendiente") // "pendiente", "entregado"
+  dispensedBy String?  // The pharmacist who dispensed it
+  dispensedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

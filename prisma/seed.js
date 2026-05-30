@@ -24,6 +24,8 @@ async function main() {
     { name: 'medico', description: 'Visualización de consultas asignadas' },
     { name: 'usuario', description: 'Personal general del hospital' },
     { name: 'visitante', description: 'Acceso básico auto-gestionado' },
+    { name: 'farmaco', description: 'Gestión y despacho de farmacia hospitalaria' },
+    { name: 'enfermero', description: 'Atención clínica y bitácora de enfermería' },
   ];
 
   console.log('Creating roles...');
@@ -42,6 +44,8 @@ async function main() {
   const roleManager = roleRecords['manager'];
   const roleGuardia = roleRecords['guardia'];
   const roleMedico = roleRecords['medico'];
+  const roleFarmaco = roleRecords['farmaco'];
+  const roleEnfermero = roleRecords['enfermero'];
 
   // Hashed Passwords
   const adminHashedPass = await bcrypt.hash('adminpassword', 10);
@@ -167,6 +171,24 @@ async function main() {
     });
     console.log(`- Guardia "${username}" upserted.`);
   }
+
+  // 4.4. Fármacos (1)
+  console.log('Registering 1 farmaco...');
+  await prisma.user.upsert({
+    where: { username: 'farmaco1' },
+    update: { password: staffHashedPass, roleId: roleFarmaco.id },
+    create: { username: 'farmaco1', name: 'Fármaco de Turno', password: staffHashedPass, roleId: roleFarmaco.id }
+  });
+  console.log('- Pharmacist "farmaco1" upserted.');
+
+  // 4.5. Enfermeros (1)
+  console.log('Registering 1 enfermero...');
+  await prisma.user.upsert({
+    where: { username: 'enfermero1' },
+    update: { password: staffHashedPass, roleId: roleEnfermero.id },
+    create: { username: 'enfermero1', name: 'Enfermero de Turno', password: staffHashedPass, roleId: roleEnfermero.id }
+  });
+  console.log('- Nurse "enfermero1" upserted.');
 
   console.log('✅ MASSIVE Seeding completed successfully!');
 }
