@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hospital Visit-Controller: Sales Kit & Guía de Producto</title>
+  <title>Aozora Care-Flow: Sales Kit & Guía de Producto</title>
   
   <!-- Modern Typography from Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,12 +21,12 @@
       --border-color: rgba(255, 255, 255, 0.08);
       --text-main: #f1f5f9;
       --text-muted: #94a3b8;
-      --primary: #10b981;
-      --primary-hover: #34d399;
+      --primary: #38bdf8; /* Ocean Sky Blue for Aozora theme */
+      --primary-hover: #7dd3fc;
       --secondary: #6366f1;
       --secondary-hover: #818cf8;
       --danger: #f43f5e;
-      --glow-emerald: rgba(16, 185, 129, 0.15);
+      --glow-sky: rgba(56, 189, 248, 0.15);
     }
 
     /* Reset & Base Styles */
@@ -44,7 +44,7 @@
       padding: 40px 20px;
       min-height: 100vh;
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
         radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
       background-attachment: fixed;
     }
@@ -65,18 +65,17 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px border var(--primary);
+      background: rgba(56, 189, 248, 0.1);
       padding: 8px 16px;
       border-radius: 50px;
       margin-bottom: 20px;
-      border: 1px solid rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(56, 189, 248, 0.2);
     }
 
     .logo-icon {
       color: var(--primary);
       font-size: 1.2rem;
-      animation: pulse 2s infinite;
+      animation: pulse 2.5s infinite;
     }
 
     .logo-text {
@@ -92,7 +91,7 @@
       font-family: 'Outfit', sans-serif;
       font-weight: 900;
       font-size: 2.5rem;
-      background: linear-gradient(135deg, #fff 40%, #a7f3d0 100%);
+      background: linear-gradient(135deg, #fff 40%, #bae6fd 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       line-height: 1.2;
@@ -134,15 +133,15 @@
 
     .btn-primary {
       background-color: var(--primary);
-      color: #000;
+      color: #020617;
       border: none;
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 20px rgba(56, 189, 248, 0.3);
     }
 
     .btn-primary:hover {
       background-color: var(--primary-hover);
       transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
+      box-shadow: 0 6px 24px rgba(56, 189, 248, 0.45);
     }
 
     .btn-secondary {
@@ -176,7 +175,7 @@
       left: 0;
       right: 0;
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent);
+      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.3), transparent);
     }
 
     /* Section Styling */
@@ -271,8 +270,8 @@
 
     .pillar-card:hover {
       transform: translateX(4px);
-      border-color: rgba(16, 185, 129, 0.2);
-      background: rgba(16, 185, 129, 0.01);
+      border-color: rgba(56, 189, 248, 0.2);
+      background: rgba(56, 189, 248, 0.01);
     }
 
     .pillar-header {
@@ -358,7 +357,7 @@
     .flow-step.active-emerald {
       border-color: var(--primary);
       color: var(--primary);
-      background: rgba(16, 185, 129, 0.05);
+      background: rgba(56, 189, 248, 0.05);
     }
 
     .flow-step.active-indigo {
@@ -412,8 +411,8 @@
 
     /* Alert Banner Box */
     .alert-box {
-      background: rgba(16, 185, 129, 0.05);
-      border: 1px solid rgba(16, 185, 129, 0.2);
+      background: rgba(56, 189, 248, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.2);
       border-radius: 16px;
       padding: 20px;
       margin-top: 30px;
@@ -462,7 +461,7 @@
         color: #000;
       }
       .subtitle {
-        color: #10b981;
+        color: #0284c7;
       }
       h2, h3, h4, th, td, strong {
         color: #000 !important;
@@ -476,7 +475,7 @@
         page-break-inside: avoid;
       }
       .bullet-list li::before {
-        color: #10b981 !important;
+        color: #0284c7 !important;
       }
       .flow-step {
         border-color: #ccc !important;
@@ -496,8 +495,8 @@
     
     <header>
       <div class="logo-container">
-        <i class="fa-solid fa-hospital logo-icon"></i>
-        <span class="logo-text">Hospital Visit-Controller</span>
+        <i class="fa-solid fa-cloud-sun logo-icon"></i>
+        <span class="logo-text">Aozora Care-Flow</span>
       </div>
       <h1>Sales Kit & Guía de Producto</h1>
       <p class="subtitle">La plataforma inteligente de control de accesos, trazabilidad y gestión de aforo clínico</p>
@@ -515,11 +514,27 @@
 
     <div class="card">
 
+      <!-- PROLOGUE: STORYTELLING EL ORIGEN DE AOZORA -->
+      <section style="background: rgba(99, 102, 241, 0.04); border: 1px solid rgba(99, 102, 241, 0.2); padding: 28px; border-radius: 20px; margin-bottom: 40px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; right: 0; width: 120px; height: 120px; background: rgba(99, 102, 241, 0.05); filter: blur(30px); border-radius: 50%;"></div>
+        <h2 style="border-bottom: none; margin-bottom: 12px; font-size: 1.35rem; color: #818cf8; font-family: 'Outfit', sans-serif; display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-heart" style="color: #f43f5e; animation: pulse 2s infinite;"></i> El Origen de Aozora: Un Legado de Cuidado Seguro
+        </h2>
+        <p style="font-style: italic; color: #cbd5e1; font-size: 0.9rem; line-height: 1.7; margin-bottom: 0;">
+          <strong>Aozora</strong> significa <em>"Cielo Azul"</em> en japonés, representando esperanza, claridad y un mañana brillante y despejado.
+          <br><br>
+          Este proyecto nace de una experiencia personal profunda: un momento de extrema vulnerabilidad cuando el hijo de nuestro fundador enfrentó complicaciones críticas al nacer en un hospital debido a fallas de comunicación y la falta de trazabilidad clínica en tiempo real. 
+          De por sí, la estancia en un hospital es un momento sumamente difícil de incertidumbre y dolor para cualquier familia; añadir errores administrativos o vacíos en el seguimiento clínico agrava esa carga de forma innecesaria.
+          <br><br>
+          <strong>Aozora Care-Flow</strong> fue concebido bajo una promesa solemne: transformar la tecnología de gestión hospitalaria para que ninguna otra familia tenga que atravesar incidentes previsibles debido a la falta de coordinación. Es un ecosistema diseñado con profundo respeto y rigor técnico, con el único fin de salvaguardar la seguridad operativa del paciente, facilitando una estancia hospitalaria transparente, segura y libre de errores humanos.
+        </p>
+      </section>
+
       <!-- SECTION 1: RESUMEN -->
       <section>
         <h2><i class="fa-solid fa-circle-info"></i> 1. Resumen Ejecutivo</h2>
         <p>
-          <strong>Hospital Visit-Controller</strong> no es solo una libreta digital de firmas; es un <strong>ecosistema de seguridad y trazabilidad operativa en tiempo real</strong> para hospitales y clínicas modernas.
+          <strong>Aozora Care-Flow</strong> no es solo una libreta digital de firmas; es un <strong>ecosistema de seguridad y trazabilidad operativa en tiempo real</strong> para hospitales y clínicas modernas.
         </p>
         <p>
           La plataforma digitaliza, agiliza y asegura el tránsito de pacientes, familiares, visitantes y proveedores desde el primer punto de contacto hasta su salida física del recinto. Al integrar tecnología de pases QR automáticos, flujos clínicos simplificados y telemetría de aforo hospitalario, la plataforma reduce la fricción en la entrada, previene brechas de seguridad y proporciona datos operativos valiosos para la administración general del centro de salud.
@@ -530,7 +545,7 @@
       <section>
         <h2><i class="fa-solid fa-hand-holding-medical"></i> 2. Problemáticas del Sector vs Solución</h2>
         <p>
-          Las soluciones tradicionales de registro en hospitales presentan brechas de seguridad críticas y cuellos de botella operativos. Aquí se detalla cómo las resuelve Visit-Controller:
+          Las soluciones tradicionales de registro en hospitales presentan brechas de seguridad críticas y cuellos de botella operativos. Aquí se detalla cómo las resuelve Aozora Care-Flow:
         </p>
         
         <div class="table-container">
@@ -538,7 +553,7 @@
             <thead>
               <tr>
                 <th>Desafío en Hospitales Tradicionales</th>
-                <th>Solución Inteligente de Visit-Controller</th>
+                <th>Solución Inteligente de Aozora Care-Flow</th>
                 <th>Impacto Operativo</th>
               </tr>
             </thead>
@@ -666,13 +681,13 @@
             <span>🎬 Preparación Inicial</span>
             <span class="badge">Inicio</span>
           </div>
-          <p>Abre la página inicial de <strong>Visit-Controller</strong>. Explica que este portal de inicio funciona como quiosco de autoservicio para pacientes sin cita previa.</p>
+          <p>Abre la página inicial de <strong>Aozora Care-Flow</strong>. Explica que este portal de inicio funciona como quiosco de autoservicio para pacientes sin cita previa.</p>
         </div>
 
         <div class="demo-step">
           <div class="demo-step-title">
             <span>🚶 Paso 1: El Registro y el QR Automático</span>
-            <span class="badge" style="background-color: var(--primary); color: #000;">Check-In</span>
+            <span class="badge" style="background-color: var(--primary); color: #020617;">Check-In</span>
           </div>
           <p>Completa el formulario en la pestaña de <strong>Check-In</strong> como "Paciente". Ingresa un correo simulado, selecciona un consultorio y regístralo.</p>
           <div class="demo-step-action">Muestra el pase digital y el código QR único generado. Explica cómo llega por Email/WhatsApp.</div>
@@ -681,7 +696,7 @@
         <div class="demo-step">
           <div class="demo-step-title">
             <span>👮 Paso 2: Escaneo en Puerta en 1 Segundo</span>
-            <span class="badge" style="background-color: var(--primary); color: #000;">Guardia</span>
+            <span class="badge" style="background-color: var(--primary); color: #020617;">Guardia</span>
           </div>
           <p>Abre el escáner de citas en el menú superior. Simula el escaneo con la cámara o carga del token QR.</p>
           <div class="demo-step-action">Explica cómo el pase se marca "In House" y notifica de inmediato al médico asignado.</div>

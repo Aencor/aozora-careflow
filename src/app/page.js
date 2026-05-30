@@ -384,7 +384,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                Hospital <span className="text-emerald-400 font-extrabold font-display">Visit-Controller</span>
+                Aozora <span className="text-emerald-400 font-extrabold font-display">Care-Flow</span>
               </h1>
               <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Registro e Ingreso Público</p>
             </div>
@@ -1196,7 +1196,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="mt-12 py-6 border-t border-white/5 text-center text-xs text-slate-500">
-        <p>&copy; {new Date().getFullYear()} Hospital Visit-Controller. Todos los derechos reservados.</p>
+        <p>&copy; {new Date().getFullYear()} Aozora Care-Flow. Todos los derechos reservados.</p>
       </footer>
     </div>
   );

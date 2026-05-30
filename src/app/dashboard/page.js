@@ -569,7 +569,7 @@ export default function DashboardPage() {
               <Activity className="w-5.5 h-5.5 text-indigo-400" />
             </div>
             <div>
-              <h2 className="font-extrabold text-base tracking-wide text-white leading-tight uppercase Outfit">Hospital Visit-Controller</h2>
+              <h2 className="font-extrabold text-base tracking-wide text-white leading-tight uppercase Outfit">Aozora Care-Flow</h2>
               <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5 font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
                 PORTAL GENERAL DE ENFERMERÍA
@@ -727,7 +727,7 @@ export default function DashboardPage() {
 
         {/* Footer */}
         <footer className="py-6 border-t border-white/5 text-center text-xs text-slate-500 bg-slate-950/20 mt-12">
-          <p>&copy; {new Date().getFullYear()} Hospital Visit-Controller. Portal de Enfermería ({session.name}).</p>
+          <p>&copy; {new Date().getFullYear()} Aozora Care-Flow. Portal de Enfermería ({session.name}).</p>
         </footer>
 
         {/* ═══ NURSE MODALS (must live inside portal return) ═══ */}
@@ -2046,7 +2046,7 @@ export default function DashboardPage() {
 
         {/* Footer */}
         <footer className="py-6 border-t border-white/5 text-center text-xs text-slate-500 mt-12">
-          <p>&copy; {new Date().getFullYear()} Hospital Visit-Controller. Portal Médico de Turno ({session.name}).</p>
+          <p>&copy; {new Date().getFullYear()} Aozora Care-Flow. Portal Médico de Turno ({session.name}).</p>
         </footer>
       </div>
     );
@@ -4792,7 +4792,7 @@ export default function DashboardPage() {
 
       {/* Admin Footer */}
       <footer className="mt-12 py-6 border-t border-white/5 text-center text-xs text-slate-500">
-        <p>&copy; {new Date().getFullYear()} Hospital Visit-Controller. Modo Administración ({session.role}).</p>
+        <p>&copy; {new Date().getFullYear()} Aozora Care-Flow. Modo Administración ({session.role}).</p>
       </footer>
     </div>
   );

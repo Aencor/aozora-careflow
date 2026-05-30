@@ -120,7 +120,7 @@ export default function ShowcasePage() {
             </Link>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-                Hospital <span className="text-emerald-400 font-extrabold font-display">Visit-Controller</span>
+                Aozora <span className="text-emerald-400 font-extrabold font-display">Care-Flow</span>
               </h1>
               <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block animate-pulse"></span>
@@ -154,7 +154,7 @@ export default function ShowcasePage() {
             Trazabilidad, Seguridad y <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400">Eficiencia Operativa</span> Hospitalaria
           </h2>
           <p className="text-slate-400 text-sm sm:text-base leading-relaxed mb-8">
-            Descubre cómo <strong>Visit-Controller</strong> transforma el caótico registro manual de visitas en un ecosistema integrado y seguro de control de aforo, indicaciones médicas y trazabilidad clínica de 360 grados.
+            Descubre cómo <strong>Aozora Care-Flow</strong> transforma el caótico registro manual de visitas en un ecosistema integrado y seguro de control de aforo, indicaciones médicas y trazabilidad clínica de 360 grados.
           </p>
           
           {/* Quick buttons */}
@@ -517,7 +517,7 @@ export default function ShowcasePage() {
                     <div className="flex justify-between items-start border-b border-white/5 pb-4 mb-4">
                       <div>
                         <h4 className="text-sm font-bold text-white">PASE DE INGRESO DIGITAL</h4>
-                        <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Hospital General Visit-Controller</p>
+                        <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Aozora Care-Flow</p>
                       </div>
                       <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0">
                         <QrCode className="w-4 h-4 text-emerald-400" />
@@ -767,7 +767,7 @@ export default function ShowcasePage() {
                         <UserCheck className="w-5 h-5 text-rose-400" />
                       </div>
                       <h4 className="text-xs font-extrabold text-white tracking-widest uppercase">REGISTRO DE EGRESO COMPLETADO</h4>
-                      <p className="text-[9px] text-slate-400">Hospital General Visit-Controller</p>
+                      <p className="text-[9px] text-slate-400">Aozora Care-Flow</p>
                     </div>
 
                     {/* Receipt Body */}
@@ -836,7 +836,7 @@ export default function ShowcasePage() {
         <section id="roles-section" className="mb-24 scroll-mt-24">
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2">Explorador de Dashboards de Trabajo</h2>
-            <p className="text-slate-400 text-xs sm:text-sm">Analiza la interfaz y las funciones exclusivas que Visit-Controller ofrece para cada rol operativo.</p>
+            <p className="text-slate-400 text-xs sm:text-sm">Analiza la interfaz y las funciones exclusivas que Aozora Care-Flow ofrece para cada rol operativo.</p>
           </div>
 
           {/* Role Tabs */}

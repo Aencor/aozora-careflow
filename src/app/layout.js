@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Visit-Controller | Control de Visitas de Hospital",
+  title: "Aozora Care-Flow | Control de Visitas y Trazabilidad Hospitalaria",
   description: "Sistema premium de monitoreo, check-in y control de accesos de visitas, pacientes y personal médico.",
   icons: {
     icon: '/favicon.ico',

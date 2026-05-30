@@ -1,20 +1,31 @@
-# 🏥 Hospital Visit-Controller: Sales Kit & Guía de Producto
+# 🏥 Aozora Care-Flow: Sales Kit & Guía de Producto
 ### *La plataforma inteligente de control de accesos, trazabilidad y gestión de aforo clínico*
 
-Este documento es una guía comercial y de producto completa, diseñada para equiparte con argumentos sólidos, flujos técnicos detallados y un guion de demostración efectivo al presentar **Visit-Controller** a directores médicos, jefes de operaciones y tomadores de decisiones en el sector de salud.
+Este documento es una guía comercial y de producto completa, diseñada para equiparte con argumentos sólidos, flujos técnicos detallados y un guion de demostración efectivo al presentar **Aozora Care-Flow** a directores médicos, jefes de operaciones y tomadores de decisiones en el sector de salud.
+
+---
+
+## 💖 Nuestra Inspiración: El Origen de Aozora
+*Aozora significa **"Cielo Azul"** en japonés, representando esperanza, claridad y un mañana brillante y despejado.*
+
+Este proyecto nace de una experiencia personal profunda: un momento de extrema vulnerabilidad cuando el hijo de nuestro fundador enfrentó complicaciones críticas al nacer en un hospital debido a fallas de comunicación y la falta de trazabilidad clínica en tiempo real. 
+
+De por sí, la estancia en un hospital es un momento sumamente difícil de incertidumbre y dolor para cualquier familia; añadir errores administrativos o vacíos en el seguimiento clínico agrava esa carga de forma innecesaria.
+
+**Aozora Care-Flow** fue concebido bajo una promesa solemne: transformar la tecnología de gestión hospitalaria para evitar que otras familias tengan que atravesar incidentes previsibles debido a la falta de coordinación. Es un ecosistema diseñado con profundo respeto y rigor técnico, con el único fin de salvaguardar la seguridad operativa del paciente, facilitando una estancia hospitalaria transparente, segura y libre de errores humanos prevenibles.
 
 ---
 
 ## 🎯 1. Resumen Ejecutivo
-**Hospital Visit-Controller** no es solo una libreta digital de firmas; es un **ecosistema de seguridad y trazabilidad operativa en tiempo real** para hospitales y clínicas modernas. 
+**Aozora Care-Flow** no es solo una libreta digital de firmas; es un **ecosistema de seguridad y trazabilidad operativa en tiempo real** para hospitales y clínicas modernas. 
 
 El sistema digitaliza, agiliza y asegura el tránsito de pacientes, familiares, visitantes y proveedores desde el primer punto de contacto hasta su salida física del recinto. Al integrar tecnología de pases QR automáticos, flujos clínicos simplificados y telemetría de aforo hospitalario, la plataforma reduce la fricción en la entrada, previene brechas de seguridad y proporciona datos operativos valiosos para la administración.
 
 ---
 
-## 🛑 2. Problemáticas del Sector vs Solución Visit-Controller
+## 🛑 2. Problemáticas del Sector vs Solución Aozora Care-Flow
 
-| Desafío en Hospitales Tradicionales | Solución Inteligente de Visit-Controller | Impacto Operativo |
+| Desafío en Hospitales Tradicionales | Solución Inteligente de Aozora Care-Flow | Impacto Operativo |
 | :--- | :--- | :--- |
 | **Puntos de acceso saturados:** Recepción lenta con registros manuales en libretas físicas o Excel. | **Check-In en 15 segundos:** Autoservicio rápido en quiosco digital o escaneo inmediato de pase QR pre-agendado. | Reduce colas en hora pico en un 70%. |
 | **Falta de control de aforo por zonas:** Desconocimiento de cuántas personas hay en urgencias, pisos de hospitalización o consultorios. | **Monitoreo de aforo en tiempo real:** Control visual del estatus de ocupación de salas y habitaciones. | Garantiza cumplimiento de normas de protección civil y bioseguridad. |
@@ -25,7 +36,7 @@ El sistema digitaliza, agiliza y asegura el tránsito de pacientes, familiares, 
 
 ## 💻 3. Los 4 Pilares de la Aplicación (Estructura de Roles)
 
-Visit-Controller se adapta al flujo natural de trabajo hospitalario mediante cuatro portales especializados:
+Aozora Care-Flow se adapta al flujo natural de trabajo hospitalario mediante cuatro portales especializados:
 
 ### 🛡️ A. Terminal del Guardia / Recepción (Control de Accesos)
 * **¿Qué hace?**: Es la primera línea de defensa. Permite realizar Check-In rápido de visitantes de entrada general, validar y admitir pases pre-agendados mediante un escáner de códigos QR y realizar la salida (Check-Out) del sistema con un solo clic.
@@ -70,8 +81,8 @@ graph TD
     E -->|Registro de Nurse Logs| F["6. Alta y Check-Out (Guardia/Recepción)"]
     F -->|Actualiza aforo y libera cama/habitación| G["7. Reporte Operativo y Auditoría (Admin)"]
     
-    style A fill:#0d9488,stroke:#0f172a,stroke-width:2px,color:#fff
-    style B fill:#10b981,stroke:#0f172a,stroke-width:2px,color:#fff
+    style A fill:#0ea5e9,stroke:#0f172a,stroke-width:2px,color:#fff
+    style B fill:#38bdf8,stroke:#0f172a,stroke-width:2px,color:#fff
     style D fill:#6366f1,stroke:#0f172a,stroke-width:2px,color:#fff
     style E fill:#4f46e5,stroke:#0f172a,stroke-width:2px,color:#fff
     style F fill:#f43f5e,stroke:#0f172a,stroke-width:2px,color:#fff
@@ -83,7 +94,7 @@ graph TD
 *Usa este guion al hacer una presentación en vivo o compartir la pantalla con un cliente:*
 
 ### 🎬 Preparación:
-1. Abre la página de inicio de **Visit-Controller**.
+1. Abre la página de inicio de **Aozora Care-Flow**.
 2. Explica que el portal de inicio es público y sirve como quiosco de autoservicio o terminal de recepción.
 
 ### 🚶 Paso 1: El Registro y el QR
