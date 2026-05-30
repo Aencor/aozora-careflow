@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Visit-Controller: Sales Kit & Guía de Producto</title>
+  
+  <!-- Modern Typography from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* Premium Color Palette & CSS Variables */
+    :root {
+      --bg-color: #0b0f19;
+      --panel-bg: rgba(17, 24, 39, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --primary: #10b981;
+      --primary-hover: #34d399;
+      --secondary: #6366f1;
+      --secondary-hover: #818cf8;
+      --danger: #f43f5e;
+      --glow-emerald: rgba(16, 185, 129, 0.15);
+    }
+
+    /* Reset & Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      padding: 40px 20px;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    /* Premium Header */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .logo-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px border var(--primary);
+      padding: 8px 16px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .logo-icon {
+      color: var(--primary);
+      font-size: 1.2rem;
+      animation: pulse 2s infinite;
+    }
+
+    .logo-text {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      letter-spacing: 0.1em;
+      color: #fff;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 900;
+      font-size: 2.5rem;
+      background: linear-gradient(135deg, #fff 40%, #a7f3d0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.2;
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      font-family: 'Outfit', sans-serif;
+      color: var(--primary);
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 25px;
+      font-style: italic;
+    }
+
+    /* Floating Action Buttons */
+    .actions-bar {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 40px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #000;
+      border: none;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.45);
+    }
+
+    .btn-secondary {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Premium Content Card (Glassmorphism) */
+    .card {
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 45px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.3), transparent);
+    }
+
+    /* Section Styling */
+    section {
+      margin-bottom: 45px;
+    }
+
+    section:last-child {
+      margin-bottom: 0;
+    }
+
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    h2 i {
+      color: var(--primary);
+    }
+
+    p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      line-height: 1.7;
+    }
+
+    strong {
+      color: #fff;
+    }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin: 25px 0;
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.02);
+      color: #fff;
+      font-weight: 700;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      padding: 16px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.01);
+      color: #fff;
+    }
+
+    /* List Pillars */
+    .pillar-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .pillar-card:hover {
+      transform: translateX(4px);
+      border-color: rgba(16, 185, 129, 0.2);
+      background: rgba(16, 185, 129, 0.01);
+    }
+
+    .pillar-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .pillar-icon {
+      font-size: 1.25rem;
+    }
+
+    .pillar-guardia .pillar-icon { color: var(--primary); }
+    .pillar-medico .pillar-icon { color: var(--secondary); }
+    .pillar-enfermera .pillar-icon { color: #a855f7; }
+    .pillar-admin .pillar-icon { color: #14b8a6; }
+
+    .pillar-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    .bullet-list {
+      list-style: none;
+      margin-top: 12px;
+      padding-left: 5px;
+    }
+
+    .bullet-list li {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .bullet-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    /* Flow Chart */
+    .flow-container {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      margin: 25px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .flow-steps {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      width: 100%;
+    }
+
+    .flow-step {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 18px;
+      text-align: center;
+      min-width: 140px;
+      flex: 1;
+      max-width: 200px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      position: relative;
+    }
+
+    .flow-step.active-emerald {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .flow-step.active-indigo {
+      border-color: var(--secondary);
+      color: var(--secondary);
+      background: rgba(99, 102, 241, 0.05);
+    }
+
+    .flow-step.active-rose {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: rgba(244, 63, 94, 0.05);
+    }
+
+    .flow-arrow {
+      align-self: center;
+      color: rgba(255, 255, 255, 0.15);
+      font-size: 1.2rem;
+    }
+
+    /* Interactive Demo Guide list */
+    .demo-step {
+      background: rgba(255, 255, 255, 0.01);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 12px 12px 0;
+      padding: 16px;
+      margin-bottom: 15px;
+    }
+
+    .demo-step-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #fff;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .demo-step-action {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      color: #fff;
+      font-family: monospace;
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    /* Alert Banner Box */
+    .alert-box {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 16px;
+      padding: 20px;
+      margin-top: 30px;
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+    }
+
+    .alert-box i {
+      color: var(--primary);
+      font-size: 1.5rem;
+      margin-top: 2px;
+    }
+
+    .alert-box-content p {
+      margin-bottom: 0;
+      font-size: 0.88rem;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 0.9; }
+    }
+
+    /* Print Styles for High-Quality PDF generation */
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+        padding: 0;
+      }
+      .actions-bar {
+        display: none;
+      }
+      .card {
+        background: none;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+      h1 {
+        background: none;
+        -webkit-text-fill-color: #000;
+        color: #000;
+      }
+      .subtitle {
+        color: #10b981;
+      }
+      h2, h3, h4, th, td, strong {
+        color: #000 !important;
+      }
+      p, li, span {
+        color: #333 !important;
+      }
+      .pillar-card, .table-container, .flow-container, .demo-step {
+        border-color: #ddd !important;
+        background: none !important;
+        page-break-inside: avoid;
+      }
+      .bullet-list li::before {
+        color: #10b981 !important;
+      }
+      .flow-step {
+        border-color: #ccc !important;
+        color: #333 !important;
+        background: none !important;
+      }
+      .alert-box {
+        border-color: #ccc !important;
+        background: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <header>
+      <div class="logo-container">
+        <i class="fa-solid fa-hospital logo-icon"></i>
+        <span class="logo-text">Hospital Visit-Controller</span>
+      </div>
+      <h1>Sales Kit & Guía de Producto</h1>
+      <p class="subtitle">La plataforma inteligente de control de accesos, trazabilidad y gestión de aforo clínico</p>
+      
+      <!-- Actions Bar to print beautifully -->
+      <div class="actions-bar">
+        <button class="btn btn-primary" onclick="window.print()">
+          <i class="fa-solid fa-file-pdf"></i> Guardar como PDF / Imprimir
+        </button>
+        <button class="btn btn-secondary" onclick="window.close()">
+          <i class="fa-solid fa-xmark"></i> Cerrar Vista
+        </button>
+      </div>
+    </header>
+
+    <div class="card">
+
+      <!-- SECTION 1: RESUMEN -->
+      <section>
+        <h2><i class="fa-solid fa-circle-info"></i> 1. Resumen Ejecutivo</h2>
+        <p>
+          <strong>Hospital Visit-Controller</strong> no es solo una libreta digital de firmas; es un <strong>ecosistema de seguridad y trazabilidad operativa en tiempo real</strong> para hospitales y clínicas modernas.
+        </p>
+        <p>
+          La plataforma digitaliza, agiliza y asegura el tránsito de pacientes, familiares, visitantes y proveedores desde el primer punto de contacto hasta su salida física del recinto. Al integrar tecnología de pases QR automáticos, flujos clínicos simplificados y telemetría de aforo hospitalario, la plataforma reduce la fricción en la entrada, previene brechas de seguridad y proporciona datos operativos valiosos para la administración general del centro de salud.
+        </p>
+      </section>
+
+      <!-- SECTION 2: PROBLEM CONTRAL -->
+      <section>
+        <h2><i class="fa-solid fa-hand-holding-medical"></i> 2. Problemáticas del Sector vs Solución</h2>
+        <p>
+          Las soluciones tradicionales de registro en hospitales presentan brechas de seguridad críticas y cuellos de botella operativos. Aquí se detalla cómo las resuelve Visit-Controller:
+        </p>
+        
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Desafío en Hospitales Tradicionales</th>
+                <th>Solución Inteligente de Visit-Controller</th>
+                <th>Impacto Operativo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Puntos de acceso saturados:</strong> Recepción sumamente lenta con registros manuales en papel o Excel.</td>
+                <td><strong>Check-In en 15 segundos:</strong> Autoservicio rápido en quiosco digital o escaneo inmediato de pase QR pre-agendado.</td>
+                <td>Reduce las colas en horas pico en un <strong>70%</strong>.</td>
+              </tr>
+              <tr>
+                <td><strong>Falta de control de aforo por zonas:</strong> Desconocimiento de cuántas personas hay en urgencias, pisos o consultorios.</td>
+                <td><strong>Monitoreo de aforo en tiempo real:</strong> Control visual en vivo del estatus de ocupación de salas y habitaciones.</td>
+                <td>Garantiza el cumplimiento estricto de normas de bioseguridad.</td>
+              </tr>
+              <tr>
+                <td><strong>Falta de trazabilidad clínica:</strong> Enfermeras y médicos duplican registros en papel para saber quién atendió a cada paciente de corta estancia.</td>
+                <td><strong>Ecosistema Integrado Guardia-Médico:</strong> El registro de entrada genera una ficha activa donde el médico prescribe y la enfermera anota vitales.</td>
+                <td>Elimina el papeleo ineficiente en áreas de observación y triaje de urgencias.</td>
+              </tr>
+              <tr>
+                <td><strong>Brechas de seguridad física:</strong> Personas no autorizadas deambulando en áreas críticas (neonatología, UCI, quirófanos).</td>
+                <td><strong>Validación estricta de destino:</strong> Pases asociados a habitaciones específicas que expiran automáticamente al hacer Check-Out.</td>
+                <td>Previene accesos no autorizados a zonas de alta vulnerabilidad médica.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 3: LOS 4 PILARES -->
+      <section>
+        <h2><i class="fa-solid fa-users-gear"></i> 3. Los 4 Pilares (Estructura de Roles)</h2>
+        <p>
+          La aplicación se adapta al flujo natural de trabajo hospitalario mediante cuatro portales y dashboards especializados:
+        </p>
+
+        <!-- Pilar A -->
+        <div class="pillar-card pillar-guardia">
+          <div class="pillar-header">
+            <i class="fa-solid fa-shield-halved pillar-icon"></i>
+            <span class="pillar-title">🛡️ Terminal del Guardia / Recepción (Control de Accesos)</span>
+          </div>
+          <p>Es la primera línea de defensa del hospital. Permite realizar el ingreso y salida en segundos utilizando códigos QR.</p>
+          <ul class="bullet-list">
+            <li><strong>Escáner QR integrado</strong> de alta velocidad directly in-browser.</li>
+            <li><strong>Buscador predictivo inteligente</strong> de personas activas ("In House").</li>
+            <li><strong>Alertas de sobrecupo</strong> instantáneas basadas en el aforo asignado a salas.</li>
+          </ul>
+        </div>
+
+        <!-- Pilar B -->
+        <div class="pillar-card pillar-medico">
+          <div class="pillar-header">
+            <i class="fa-solid fa-user-doctor pillar-icon"></i>
+            <span class="pillar-title">🩺 Portal del Médico Tratante (Trazabilidad y Atención)</span>
+          </div>
+          <p>Permite a los médicos de consultorios o urgencias ver en tiempo real a los pacientes que se dirigen a su consulta.</p>
+          <ul class="bullet-list">
+            <li><strong>Cola de atención automatizada</strong> según el Check-In en recepción.</li>
+            <li><strong>Registro de diagnóstico simplificado</strong> (sintomatología, dolencias).</li>
+            <li><strong>Recetario electrónico</strong> de medicamentos e indicaciones para enfermería.</li>
+          </ul>
+        </div>
+
+        <!-- Pilar C -->
+        <div class="pillar-card pillar-enfermera">
+          <div class="pillar-header">
+            <i class="fa-solid fa-prescription-bottle-medical pillar-icon"></i>
+            <span class="pillar-title">💊 Portal de Enfermería (Seguimiento de Cuidados)</span>
+          </div>
+          <p>Centraliza la bitácora de administración de medicamentos y tratamientos de los pacientes en observación o camas.</p>
+          <ul class="bullet-list">
+            <li><strong>Nurse Logs integrados</strong> vinculados directamente a la visita activa.</li>
+            <li><strong>Acceso inmediato</strong> a las indicaciones digitales dejadas por el médico tratante.</li>
+            <li><strong>Historial inmutable</strong> de insumos administrados y responsables.</li>
+          </ul>
+        </div>
+
+        <!-- Pilar D -->
+        <div class="pillar-card pillar-admin">
+          <div class="pillar-header">
+            <i class="fa-solid fa-chart-line pillar-icon"></i>
+            <span class="pillar-title">📊 Panel de Administración y Managers (Métricas y Control)</span>
+          </div>
+          <p>Proporciona telemetría operativa completa para directores médicos y gerentes administrativos.</p>
+          <ul class="bullet-list">
+            <li><strong>Mapa en vivo de habitaciones</strong> (Disponible, Ocupada, Mantenimiento).</li>
+            <li><strong>Alta e inventario</strong> de médicos, consultorios y especialidades.</li>
+            <li><strong>Métricas de desempeño</strong>: tiempos de estancia promedio y horas de mayor afluencia.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SECTION 4: FLUJO DE VIDA -->
+      <section>
+        <h2><i class="fa-solid fa-route"></i> 4. Flujo de Vida de una Visita (Trazabilidad 360°)</h2>
+        <p>
+          El viaje digital del paciente en urgencias, triaje o consulta externa fluye de manera natural y sin papeles:
+        </p>
+
+        <div class="flow-container">
+          <div class="flow-steps">
+            <div class="flow-step active-emerald">1. Pre-Registro Cita (Genera QR)</div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step active-emerald">2. Check-In Puerta (Escaneo Guardia)</div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step active-indigo">3. Atención Médica (Diagnóstico)</div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step active-indigo">4. Bitácora Cuidados (Enfermería)</div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step active-rose">5. Alta y Check-Out (Salida Física)</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: GUION DE DEMOSTRACIÓN -->
+      <section>
+        <h2><i class="fa-solid fa-chalkboard-user"></i> 5. Guion de Demostración Comercial</h2>
+        <p>
+          Utiliza este guion paso a paso al realizar una presentación en vivo o compartir pantalla con directivos de hospitales:
+        </p>
+
+        <div class="demo-step">
+          <div class="demo-step-title">
+            <span>🎬 Preparación Inicial</span>
+            <span class="badge">Inicio</span>
+          </div>
+          <p>Abre la página inicial de <strong>Visit-Controller</strong>. Explica que este portal de inicio funciona como quiosco de autoservicio para pacientes sin cita previa.</p>
+        </div>
+
+        <div class="demo-step">
+          <div class="demo-step-title">
+            <span>🚶 Paso 1: El Registro y el QR Automático</span>
+            <span class="badge" style="background-color: var(--primary); color: #000;">Check-In</span>
+          </div>
+          <p>Completa el formulario en la pestaña de <strong>Check-In</strong> como "Paciente". Ingresa un correo simulado, selecciona un consultorio y regístralo.</p>
+          <div class="demo-step-action">Muestra el pase digital y el código QR único generado. Explica cómo llega por Email/WhatsApp.</div>
+        </div>
+
+        <div class="demo-step">
+          <div class="demo-step-title">
+            <span>👮 Paso 2: Escaneo en Puerta en 1 Segundo</span>
+            <span class="badge" style="background-color: var(--primary); color: #000;">Guardia</span>
+          </div>
+          <p>Abre el escáner de citas en el menú superior. Simula el escaneo con la cámara o carga del token QR.</p>
+          <div class="demo-step-action">Explica cómo el pase se marca "In House" y notifica de inmediato al médico asignado.</div>
+        </div>
+
+        <div class="demo-step">
+          <div class="demo-step-title">
+            <span>🩺 Paso 3: La Consulta del Médico Tratante</span>
+            <span class="badge" style="background-color: var(--secondary); color: #fff;">Médico</span>
+          </div>
+          <p>Inicia sesión como médico (ej: usuario <code>medico1</code> / clave <code>doctorpassword</code>) en la sección `/login`.</p>
+          <div class="demo-step-action">Muestra cómo el paciente aparece de primero en la fila. Registra su diagnóstico y expide la receta electrónica.</div>
+        </div>
+
+        <div class="demo-step">
+          <div class="demo-step-title">
+            <span>💊 Paso 4: La Bitácora de Enfermería en Acción</span>
+            <span class="badge" style="background-color: #a855f7; color: #fff;">Enfermera</span>
+          </div>
+          <p>Abre la sección de Visitas Activas desde el menú o el panel general de enfermería.</p>
+          <div class="demo-step-action">Añade un Nurse Log al paciente de prueba ingresando los medicamentos aplicados. Todo queda ligado al expediente.</div>
+        </div>
+
+        <div class="demo-step">
+          <div class="demo-step-title">
+            <span>📊 Paso 5: Egreso Seguro y Liberación de Aforo</span>
+            <span class="badge" style="background-color: var(--danger); color: #fff;">Salida</span>
+          </div>
+          <p>Regresa a la página principal y simula la salida (Check-Out) buscando al paciente en el buscador predictivo del guardia.</p>
+          <div class="demo-step-action">Muestra cómo el aforo total se descuenta en vivo y la habitación queda liberada en el dashboard de administrador.</div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: ROI ARGUMENTOS -->
+      <section>
+        <h2><i class="fa-solid fa-comments-dollar"></i> 6. Argumentos de Retorno de Inversión (ROI)</h2>
+        <ul class="bullet-list" style="margin-left: 10px;">
+          <li><strong>Ahorro del 80% en Tiempos de Entrada:</strong> Registro ágil en solo 15 segundos en lugar de los 3 minutos del sistema manual. En un hospital mediano, esto libera hasta 20 horas de trabajo diarias.</li>
+          <li><strong>Cero Papelería:</strong> Eliminación de pases plásticos impresos, libretas de firmas y archivo físico de hojas de observación en urgencias.</li>
+          <li><strong>Cumplimiento Normativo de Aforos:</strong> Evita multas de protección civil gracias a la telemetría en tiempo real de pacientes presentes.</li>
+        </ul>
+
+        <div class="alert-box">
+          <i class="fa-solid fa-lightbulb"></i>
+          <div class="alert-box-content">
+            <p><strong>Consejo comercial para la reunión de ventas:</strong></p>
+            <p style="margin-top: 5px;">
+              Invita a los tomadores de decisiones a abrir el <strong>Showcase Interactivo (en la ruta `/showcase`)</strong> desde sus propios teléfonos móviles o tablets durante tu presentación para que experimenten en vivo la fluidez y adaptabilidad móvil de la aplicación.
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+</body>
+</html>

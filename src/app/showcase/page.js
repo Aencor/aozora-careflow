@@ -1150,12 +1150,13 @@ export default function ShowcasePage() {
             </p>
             <div className="pt-2">
               <a 
-                href="/PRODUCT_SHOWCASE_SALES_KIT.md"
-                download="PRODUCT_SHOWCASE_SALES_KIT.md"
+                href="/PRODUCT_SHOWCASE_SALES_KIT.html"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-slate-700 bg-slate-900/60 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800/60 text-xs font-bold transition-all duration-300"
               >
-                <Download className="w-4 h-4 text-emerald-400" />
-                <span>Descargar Sales Kit Comercial de Producto</span>
+                <Award className="w-4 h-4 text-emerald-400" />
+                <span>Abrir Sales Kit Comercial de Producto</span>
               </a>
             </div>
           </div>
