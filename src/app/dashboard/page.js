@@ -936,6 +936,82 @@ export default function DashboardPage() {
                       <Plus className="w-3.5 h-3.5" /> Solicitudes a Farmacia ({visitPharmacyRequests.length})
                     </h4>
                     
+                    {/* Direct Pharmacy Request Form */}
+                    <div className="p-3.5 rounded-xl bg-sky-950/20 border border-sky-500/10 space-y-2">
+                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Nueva Solicitud Directa a Farmacia</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Ej. Paracetamol 500mg c/8h, Sol. Fisiológica 100ml..."
+                          id="direct-medicine-input"
+                          className="flex-1 p-2.5 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                          onKeyDown={async (e) => {
+                            if (e.key === 'Enter' && e.target.value.trim()) {
+                              const inputVal = e.target.value;
+                              e.target.value = '';
+                              try {
+                                const res = await fetch('/api/pharmacy-requests', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    visitId: selectedVisitForNurse.id,
+                                    medicines: inputVal,
+                                    nurseName: session.name
+                                  })
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  triggerNotification('success', 'Solicitud enviada a farmacia.');
+                                  fetchNurseLogs(selectedVisitForNurse.id);
+                                } else {
+                                  triggerNotification('error', data.error || 'Error al enviar.');
+                                  e.target.value = inputVal;
+                                }
+                              } catch (err) {
+                                triggerNotification('error', 'Error al enviar.');
+                                e.target.value = inputVal;
+                              }
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={async () => {
+                            const inputEl = document.getElementById('direct-medicine-input');
+                            if (inputEl && inputEl.value.trim()) {
+                              const inputVal = inputEl.value;
+                              inputEl.value = '';
+                              try {
+                                const res = await fetch('/api/pharmacy-requests', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    visitId: selectedVisitForNurse.id,
+                                    medicines: inputVal,
+                                    nurseName: session.name
+                                  })
+                                });
+                                const data = await res.json();
+                                if (data.success) {
+                                  triggerNotification('success', 'Solicitud enviada a farmacia.');
+                                  fetchNurseLogs(selectedVisitForNurse.id);
+                                } else {
+                                  triggerNotification('error', data.error || 'Error al enviar.');
+                                  inputEl.value = inputVal;
+                                }
+                              } catch (err) {
+                                triggerNotification('error', 'Error al enviar.');
+                                inputEl.value = inputVal;
+                              }
+                            }
+                          }}
+                          className="px-3 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold uppercase transition-all duration-300 cursor-pointer flex items-center justify-center"
+                        >
+                          Pedir
+                        </button>
+                      </div>
+                      <p className="text-[8px] text-slate-500 leading-none">Presiona Enter o el botón "Pedir" para enviar al fármaco de inmediato.</p>
+                    </div>
+                    
                     {visitPharmacyRequests.length > 0 ? (
                       <div className="space-y-3.5 max-h-[40vh] overflow-y-auto pr-1">
                         {visitPharmacyRequests.map((req) => {
@@ -2520,13 +2596,14 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const [visitsRes, rolesRes, usersRes, clinicsRes, doctorsRes, roomsRes] = await Promise.all([
+      const [visitsRes, rolesRes, usersRes, clinicsRes, doctorsRes, roomsRes, pharmacyRes] = await Promise.all([
         fetch('/api/visits').then(r => r.json()),
         fetch('/api/roles').then(r => r.json()),
         fetch('/api/users').then(r => r.json()),
         fetch('/api/clinics').then(r => r.json()),
         fetch('/api/doctors').then(r => r.json()),
-        fetch('/api/rooms').then(r => r.json())
+        fetch('/api/rooms').then(r => r.json()),
+        fetch('/api/pharmacy-requests').then(r => r.json())
       ]);
 
       if (visitsRes.success) setVisits(visitsRes.visits);
@@ -2535,6 +2612,7 @@ export default function DashboardPage() {
       if (clinicsRes.success) setClinics(clinicsRes.clinics);
       if (doctorsRes.success) setDoctors(doctorsRes.doctors);
       if (roomsRes.success) setRooms(roomsRes.rooms);
+      if (pharmacyRes.success) setPharmacyRequests(pharmacyRes.requests);
     } catch (err) {
       console.error('Error fetching dashboard lists:', err);
     }
@@ -3425,7 +3503,8 @@ export default function DashboardPage() {
                 { id: 'staff', label: 'Personal Hospital', icon: Users },
                 { id: 'guardias', label: 'Guardias de Seguridad', icon: ShieldAlert },
                 { id: 'presence', label: 'Asistencia / Presencia', icon: UserCheck },
-                { id: 'roles', label: 'Roles Dinámicos', icon: ShieldCheck }
+                { id: 'roles', label: 'Roles Dinámicos', icon: ShieldCheck },
+                { id: 'pharmacy', label: 'Farmacia Hospital', icon: Pill }
               ].map(sec => {
                 const Icon = sec.icon;
                 return (
@@ -4217,6 +4296,157 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
+                </div>
+              )}
+
+              {/* SECTION: PHARMACY AUDIT & MONITORING */}
+              {adminSection === 'pharmacy' && (
+                <div className="space-y-6">
+                  
+                  {/* Stats Cards inside section */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Pendientes de Despacho</p>
+                        <p className="text-xl font-black text-amber-400 mt-1">{pharmacyRequests.filter(r => r.status === 'pendiente').length}</p>
+                      </div>
+                      <div className="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                        <Clock className="w-4.5 h-4.5 text-amber-400" />
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Entregadas</p>
+                        <p className="text-xl font-black text-emerald-400 mt-1">{pharmacyRequests.filter(r => r.status === 'entregado').length}</p>
+                      </div>
+                      <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                        <CheckCircle className="w-4.5 h-4.5 text-emerald-400" />
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 flex items-center justify-between">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total de Solicitudes</p>
+                        <p className="text-xl font-black text-sky-400 mt-1">{pharmacyRequests.length}</p>
+                      </div>
+                      <div className="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
+                        <Pill className="w-4.5 h-4.5 text-sky-400" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Requests Table */}
+                  <div className="glass-panel rounded-2xl p-6 border border-white/5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4 mb-4">
+                      <div>
+                        <h4 className="font-extrabold text-white text-base Outfit">Cola Global de Medicamentos</h4>
+                        <p className="text-xs text-slate-400 mt-0.5">Monitoreo en tiempo real de trazabilidad clínica y entregas a pacientes.</p>
+                      </div>
+                      <button
+                        onClick={fetchDashboardData}
+                        className="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer self-start sm:self-center transition-all"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" /> Sincronizar
+                      </button>
+                    </div>
+
+                    {pharmacyRequests.length === 0 ? (
+                      <div className="py-16 text-center flex flex-col items-center justify-center gap-3 text-slate-500">
+                        <Pill className="w-10 h-10" />
+                        <p className="text-xs">No se han registrado solicitudes de medicamentos en el sistema.</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="border-b border-white/5 text-slate-400 font-extrabold uppercase tracking-widest text-[9px]">
+                              <th className="py-3 px-4">Paciente & Habitación</th>
+                              <th className="py-3 px-4">Medicamentos Solicitados</th>
+                              <th className="py-3 px-4">Enfermero(a)</th>
+                              <th className="py-3 px-4">Fecha Solicitud</th>
+                              <th className="py-3 px-4">Estatus</th>
+                              <th className="py-3 px-4">Despacho</th>
+                              <th className="py-3 px-4 text-right">Acción</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pharmacyRequests.map((req) => {
+                              const date = new Date(req.createdAt);
+                              const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                              return (
+                                <tr key={req.id} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                                  <td className="py-3.5 px-4">
+                                    <span className="font-bold text-white block">{req.visit?.patientName || 'Paciente General'}</span>
+                                    <span className="text-[10px] text-slate-400 mt-0.5 block font-mono">📍 Hab: {req.visit?.destination || 'N/A'}</span>
+                                  </td>
+                                  <td className="py-3.5 px-4 max-w-xs">
+                                    <div className="bg-slate-950/40 p-2 rounded border border-white/5 font-mono text-[10px] text-slate-300 leading-normal whitespace-pre-line">
+                                      {req.medicines}
+                                    </div>
+                                  </td>
+                                  <td className="py-3.5 px-4 font-semibold text-slate-300">
+                                    {req.nurseName}
+                                  </td>
+                                  <td className="py-3.5 px-4 text-slate-400 font-mono">
+                                    {formattedDate}
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border tracking-wider ${
+                                      req.status === 'pendiente'
+                                        ? 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                                        : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                                    }`}>
+                                      {req.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-4 text-slate-400 text-[10px]">
+                                    {req.status === 'entregado' ? (
+                                      <div className="space-y-0.5">
+                                        <span className="text-emerald-400 font-bold block">✓ {req.dispensedBy}</span>
+                                        <span className="text-[9px] text-slate-500 font-mono block">
+                                          {req.dispensedAt ? new Date(req.dispensedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-slate-600 font-mono italic">Sin despachar</span>
+                                    )}
+                                  </td>
+                                  <td className="py-3.5 px-4 text-right">
+                                    {req.status === 'pendiente' ? (
+                                      <button
+                                        onClick={async () => {
+                                          try {
+                                            const res = await fetch('/api/pharmacy-requests', {
+                                              method: 'PUT',
+                                              headers: { 'Content-Type': 'application/json' },
+                                              body: JSON.stringify({ requestId: req.id })
+                                            });
+                                            const data = await res.json();
+                                            if (data.success) {
+                                              triggerNotification('success', 'Medicamentos despachados por Administración.');
+                                              fetchDashboardData(); // Refresh list
+                                            } else {
+                                              triggerNotification('error', data.error || 'Error al despachar.');
+                                            }
+                                          } catch (err) {
+                                            triggerNotification('error', 'Error de red.');
+                                          }
+                                        }}
+                                        className="px-2.5 py-1 rounded bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold uppercase text-[9px] tracking-wider transition-all cursor-pointer shadow-[0_0_10px_rgba(14,165,233,0.2)] hover:shadow-[0_0_15px_rgba(14,165,233,0.4)]"
+                                      >
+                                        Despachar
+                                      </button>
+                                    ) : (
+                                      <span className="text-slate-500 text-[10px] font-bold uppercase">Entregado</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
