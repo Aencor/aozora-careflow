@@ -190,6 +190,56 @@ async function main() {
   });
   console.log('- Nurse "enfermero1" upserted.');
 
+  // 4.6. Create 31 Sample Medications
+  console.log('Creating 31 sample medications...');
+  const medicationsData = [
+    { name: 'Paracetamol 500mg', description: 'Analgésico y antipirético indicado para aliviar dolor leve a moderado y fiebre.', category: 'Analgésico', stock: 150, unit: 'Cajas' },
+    { name: 'Ibuprofeno 400mg', description: 'Antiinflamatorio no esteroideo (AINE) para dolor, inflamación y fiebre.', category: 'Antiinflamatorio', stock: 120, unit: 'Cajas' },
+    { name: 'Ketorolaco 10mg', description: 'Analgésico potente indicado para el tratamiento a corto plazo del dolor moderado a severo.', category: 'Analgésico', stock: 80, unit: 'Cajas' },
+    { name: 'Metamizol Sódico 1g IV', description: 'Analgésico y antipirético inyectable para dolor severo agudo o fiebre refractaria.', category: 'Analgésico', stock: 200, unit: 'Ampollas' },
+    { name: 'Tramadol 50mg', description: 'Analgésico opioide para dolor moderado a severo.', category: 'Analgésico', stock: 60, unit: 'Cajas' },
+    { name: 'Amoxicilina 500mg', description: 'Antibiótico betalactámico de amplio espectro para infecciones bacterianas.', category: 'Antibiótico', stock: 100, unit: 'Cajas' },
+    { name: 'Ceftriaxona 1g IV', description: 'Antibiótico cefalosporínico de tercera generación para infecciones severas.', category: 'Antibiótico', stock: 150, unit: 'Ampollas' },
+    { name: 'Azitromicina 500mg', description: 'Antibiótico macrólido para infecciones de vías respiratorias y tejidos blandos.', category: 'Antibiótico', stock: 90, unit: 'Cajas' },
+    { name: 'Ciprofloxacino 500mg', description: 'Antibiótico fluoroquinolona de amplio espectro para infecciones urinarias y respiratorias.', category: 'Antibiótico', stock: 110, unit: 'Cajas' },
+    { name: 'Claritromicina 500mg', description: 'Antibiótico macrólido indicado en infecciones respiratorias y de piel.', category: 'Antibiótico', stock: 70, unit: 'Cajas' },
+    { name: 'Clindamicina 300mg', description: 'Antibiótico indicado para bacterias anaerobias e infecciones óseas/articulares.', category: 'Antibiótico', stock: 85, unit: 'Cajas' },
+    { name: 'Losartán 50mg', description: 'Antagonista de receptores de angiotensina II para hipertensión arterial.', category: 'Cardiovascular', stock: 180, unit: 'Cajas' },
+    { name: 'Enalapril 10mg', description: 'Inhibidor de la ECA para tratamiento de hipertensión e insuficiencia cardíaca.', category: 'Cardiovascular', stock: 140, unit: 'Cajas' },
+    { name: 'Amlodipino 5mg', description: 'Antagonista de canales de calcio indicado para hipertensión y angina de pecho.', category: 'Cardiovascular', stock: 130, unit: 'Cajas' },
+    { name: 'Metoprolol 100mg', description: 'Beta-bloqueador para hipertensión arterial, angina de pecho y arritmias.', category: 'Cardiovascular', stock: 95, unit: 'Cajas' },
+    { name: 'Atorvastatina 20mg', description: 'Estatina indicada para reducir el colesterol y triglicéridos elevados.', category: 'Cardiovascular', stock: 200, unit: 'Cajas' },
+    { name: 'Metformina 850mg', description: 'Antidiabético oral para el control de la diabetes mellitus tipo 2.', category: 'Endocrino', stock: 250, unit: 'Cajas' },
+    { name: 'Glibenclamida 5mg', description: 'Hipoglucemiante oral del grupo de las sulfonilureas para diabetes tipo 2.', category: 'Endocrino', stock: 100, unit: 'Cajas' },
+    { name: 'Insulina Glargina 100 UI/ml', description: 'Insulina de acción prolongada de 24 horas para control glucémico.', category: 'Endocrino', stock: 50, unit: 'Viales' },
+    { name: 'Insulina Rápida Humana 100 UI/ml', description: 'Insulina de acción rápida/regular para control glucémico prandial.', category: 'Endocrino', stock: 45, unit: 'Viales' },
+    { name: 'Loratadina 10mg', description: 'Antihistamínico de segunda generación no sedante para alergias y rinitis.', category: 'Antihistamínico', stock: 160, unit: 'Cajas' },
+    { name: 'Cetirizina 10mg', description: 'Antihistamínico para alivio de síntomas de rinitis alérgica y urticaria.', category: 'Antihistamínico', stock: 140, unit: 'Cajas' },
+    { name: 'Salbutamol Aerosol 100mcg', description: 'Broncodilatador beta-2 agonista de acción rápida para asma y broncoespasmo.', category: 'Respiratorio', stock: 75, unit: 'Inhaladores' },
+    { name: 'Montelukast 10mg', description: 'Antagonista de receptores de leucotrienos para control crónico del asma.', category: 'Respiratorio', stock: 110, unit: 'Cajas' },
+    { name: 'Omeprazol 20mg', description: 'Inhibidor de la bomba de protones para gastritis, reflujo y úlceras.', category: 'Gastrointestinal', stock: 300, unit: 'Cajas' },
+    { name: 'Ranitidina 150mg', description: 'Antagonista de receptores H2 para reducir acidez estomacal.', category: 'Gastrointestinal', stock: 150, unit: 'Cajas' },
+    { name: 'Metoclopramida 10mg', description: 'Procinético y antiemético para reflujo gastroesofágico y náuseas.', category: 'Gastrointestinal', stock: 120, unit: 'Cajas' },
+    { name: 'Butilhioscina 10mg', description: 'Espasmolítico para cólicos y espasmos del tracto gastrointestinal y biliar.', category: 'Gastrointestinal', stock: 90, unit: 'Cajas' },
+    { name: 'Dexametasona 4mg IV', description: 'Corticoesteroide antiinflamatorio e inmunosupresor inyectable potente.', category: 'Corticoesteroide', stock: 100, unit: 'Ampollas' },
+    { name: 'Prednisona 5mg', description: 'Glucocorticoide sintético de acción intermedia para afecciones inflamatorias.', category: 'Corticoesteroide', stock: 120, unit: 'Cajas' },
+    { name: 'Diazepam 10mg', description: 'Benzodiacepina con efectos ansiolíticos, miorrelajantes y anticonvulsivantes.', category: 'Ansiolítico', stock: 80, unit: 'Cajas' }
+  ];
+
+  for (const med of medicationsData) {
+    await prisma.medication.upsert({
+      where: { name: med.name },
+      update: {
+        description: med.description,
+        category: med.category,
+        stock: med.stock,
+        unit: med.unit
+      },
+      create: med
+    });
+  }
+  console.log('- 31 Sample medications upserted successfully.');
+
   console.log('✅ MASSIVE Seeding completed successfully!');
 }
 

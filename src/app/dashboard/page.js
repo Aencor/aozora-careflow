@@ -158,6 +158,18 @@ export default function DashboardPage() {
   const [pharmacyRequests, setPharmacyRequests] = useState([]);
   const [pharmacyLoading, setPharmacyLoading] = useState(false);
 
+  // Medications Catalog States
+  const [medications, setMedications] = useState([]);
+  const [pharmacistSubTab, setPharmacistSubTab] = useState('despacho'); // 'despacho' | 'inventario'
+  const [medicationSearch, setMedicationSearch] = useState('');
+  
+  // Form States - Medication Registry
+  const [newMedName, setNewMedName] = useState('');
+  const [newMedDesc, setNewMedDesc] = useState('');
+  const [newMedCategory, setNewMedCategory] = useState('Analgésico');
+  const [newMedStock, setNewMedStock] = useState(0);
+  const [newMedUnit, setNewMedUnit] = useState('Cajas');
+
   // Edit Room States
   const [showEditRoomModal, setShowEditRoomModal] = useState(false);
   const [editingRoom, setEditingRoom] = useState(null);
@@ -217,12 +229,19 @@ export default function DashboardPage() {
   const fetchPharmacyRequests = async () => {
     setPharmacyLoading(true);
     try {
-      const res = await fetch('/api/pharmacy-requests');
-      const data = await res.json();
-      if (data.success) {
-        setPharmacyRequests(data.requests);
+      const [requestsRes, medicationsRes] = await Promise.all([
+        fetch('/api/pharmacy-requests').then(r => r.json()),
+        fetch('/api/medications').then(r => r.json())
+      ]);
+
+      if (requestsRes.success) {
+        setPharmacyRequests(requestsRes.requests);
       } else {
-        triggerNotification('error', data.error || 'Error al obtener solicitudes de farmacia.');
+        triggerNotification('error', requestsRes.error || 'Error al obtener solicitudes.');
+      }
+
+      if (medicationsRes.success) {
+        setMedications(medicationsRes.medications);
       }
     } catch (err) {
       triggerNotification('error', 'Error de red al consultar farmacia.');
@@ -248,6 +267,98 @@ export default function DashboardPage() {
       }
     } catch (err) {
       triggerNotification('error', 'Error de red al despachar el medicamento.');
+    }
+  };
+
+  // Add a new medication to the central catalog
+  const handleCreateMedication = async (e) => {
+    e.preventDefault();
+    if (!newMedName.trim() || !newMedCategory.trim()) {
+      triggerNotification('error', 'Por favor ingresa nombre y categoría.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/medications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newMedName,
+          description: newMedDesc,
+          category: newMedCategory,
+          stock: parseInt(newMedStock) || 0,
+          unit: newMedUnit
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        triggerNotification('success', 'Medicamento agregado con éxito.');
+        setNewMedName('');
+        setNewMedDesc('');
+        setNewMedStock(0);
+        setNewMedUnit('Cajas');
+        
+        // Refresh catalog
+        if (session && session.role === 'farmaco') {
+          fetchPharmacyRequests();
+        } else {
+          fetchDashboardData();
+        }
+      } else {
+        triggerNotification('error', data.error || 'Error al agregar medicamento.');
+      }
+    } catch (err) {
+      triggerNotification('error', 'Error de red.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update stock level for a medication in inventory
+  const handleUpdateStock = async (medId, currentStock, change) => {
+    const newStock = Math.max(0, currentStock + change);
+    try {
+      const res = await fetch('/api/medications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: medId, stock: newStock })
+      });
+      const data = await res.json();
+      if (data.success) {
+        triggerNotification('success', 'Inventario actualizado.');
+        if (session && session.role === 'farmaco') {
+          fetchPharmacyRequests();
+        } else {
+          fetchDashboardData();
+        }
+      } else {
+        triggerNotification('error', data.error || 'Error al actualizar inventario.');
+      }
+    } catch (err) {
+      triggerNotification('error', 'Error de red.');
+    }
+  };
+
+  // Delete a medication from catalog
+  const handleDeleteMedication = async (medId) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este medicamento de la farmacia?')) return;
+    try {
+      const res = await fetch(`/api/medications?id=${medId}`, {
+        method: 'DELETE'
+      });
+      const data = await res.json();
+      if (data.success) {
+        triggerNotification('success', 'Medicamento eliminado del catálogo.');
+        if (session && session.role === 'farmaco') {
+          fetchPharmacyRequests();
+        } else {
+          fetchDashboardData();
+        }
+      } else {
+        triggerNotification('error', data.error || 'Error al eliminar.');
+      }
+    } catch (err) {
+      triggerNotification('error', 'Error de red.');
     }
   };
 
@@ -2262,6 +2373,12 @@ export default function DashboardPage() {
     const pendingRequests = pharmacyRequests.filter(r => r.status === 'pendiente');
     const deliveredRequests = pharmacyRequests.filter(r => r.status === 'entregado');
 
+    // Filter medications based on search bar
+    const filteredMeds = medications.filter(med => 
+      med.name.toLowerCase().includes(medicationSearch.toLowerCase()) ||
+      med.category.toLowerCase().includes(medicationSearch.toLowerCase())
+    );
+
     return (
       <div className="flex-1 flex flex-col min-h-screen bg-[#090d16] text-slate-100 font-sans antialiased">
         {/* Toast Alert */}
@@ -2331,7 +2448,7 @@ export default function DashboardPage() {
                 ¡Hola, {session.name}! 👋
               </h1>
               <p className="text-xs text-slate-400 mt-1 max-w-2xl leading-relaxed">
-                Esta es tu consola de despacho de medicamentos. Todas las solicitudes de medicamentos generadas por enfermería durante los chequeos clínicos aparecen aquí en tiempo real para su entrega y registro digital seguro.
+                Consola integrada de farmacia de Aozora Care-Flow. Cambia entre el panel de despacho inmediato y el gestor de inventario clínico.
               </p>
             </div>
             
@@ -2341,215 +2458,433 @@ export default function DashboardPage() {
               className="px-4 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500/25 border border-sky-400/20 text-sky-400 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-all duration-300 active:scale-95 disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${pharmacyLoading ? 'animate-spin' : ''}`} />
-              {pharmacyLoading ? 'Sincronizando...' : 'Refrescar Cola'}
+              {pharmacyLoading ? 'Sincronizando...' : 'Refrescar Datos'}
             </button>
           </div>
 
-          {/* Stats Bar */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl bg-slate-950/35 border border-white/5 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Pendientes de Entrega</p>
-                <p className="text-2xl font-black text-amber-400 mt-1 tracking-tight">{pendingRequests.length}</p>
-              </div>
-              <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
-                <Clock className="w-5 h-5 text-amber-400" />
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-950/35 border border-white/5 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Despachadas con Éxito</p>
-                <p className="text-2xl font-black text-emerald-400 mt-1 tracking-tight">{deliveredRequests.length}</p>
-              </div>
-              <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                <CheckCircle className="w-5 h-5 text-emerald-400" />
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-950/35 border border-white/5 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Histórico</p>
-                <p className="text-2xl font-black text-white mt-1 tracking-tight">{pharmacyRequests.length}</p>
-              </div>
-              <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
-                <Pill className="w-5 h-5 text-slate-300" />
-              </div>
-            </div>
+          {/* Sub-navigation Tabs */}
+          <div className="flex gap-2 border-b border-white/5 pb-2">
+            {[
+              { id: 'despacho', label: 'Cola de Despacho', icon: Clock },
+              { id: 'inventario', label: 'Inventario de Medicamentos', icon: Pill }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setPharmacistSubTab(tab.id)}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 border transition-all duration-300 cursor-pointer ${
+                    pharmacistSubTab === tab.id
+                      ? 'bg-sky-500/10 border-sky-500/30 text-sky-400 shadow-[0_0_12px_rgba(14,165,233,0.15)]'
+                      : 'bg-transparent border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Grid Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {/* Left Column: Pending Cola */}
-            <div className="lg:col-span-7 space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                <h3 className="text-sm font-extrabold text-white tracking-wider uppercase Outfit flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
-                  Cola de Despacho Inmediato ({pendingRequests.length})
-                </h3>
-              </div>
-
-              {pendingRequests.length === 0 ? (
-                <div className="p-12 text-center rounded-2xl bg-slate-950/20 border border-dashed border-white/10 flex flex-col items-center justify-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center">
-                    <CheckCircle className="w-8 h-8 text-emerald-400/80 animate-bounce" />
-                  </div>
+          {/* Render sub-tabs content */}
+          {pharmacistSubTab === 'despacho' ? (
+            <>
+              {/* Stats Bar */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fadeIn">
+                <div className="p-4 rounded-xl bg-slate-950/35 border border-white/5 flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-extrabold text-white">¡Gran trabajo! Sin solicitudes pendientes</h4>
-                    <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-                      Todas las recetas y solicitudes de enfermería han sido debidamente suministradas y registradas en el sistema.
-                    </p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Pendientes de Entrega</p>
+                    <p className="text-2xl font-black text-amber-400 mt-1 tracking-tight">{pendingRequests.length}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                    <Clock className="w-5 h-5 text-amber-400" />
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
-                  {pendingRequests.map((req) => {
-                    const reqDate = new Date(req.createdAt);
-                    const formattedTime = reqDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                    const minutesElapsed = Math.floor((new Date() - reqDate) / 60000);
-                    
-                    return (
-                      <div 
-                        key={req.id} 
-                        className="p-5 rounded-2xl bg-gradient-to-br from-slate-950/80 to-slate-900/50 border border-white/5 hover:border-sky-500/30 transition-all duration-300 shadow-xl relative overflow-hidden group hover:shadow-[0_0_20px_rgba(14,165,233,0.05)]"
-                      >
-                        {/* Status stripe accent */}
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 group-hover:bg-sky-500 transition-colors duration-300"></div>
-                        
-                        {/* Upper Row: Room, Name, Elapsed badge */}
-                        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-                          <div className="space-y-1">
-                            <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-sky-950 border border-sky-400/20 text-sky-300 flex items-center gap-1 w-max">
-                              <Bed className="w-3 h-3" /> {req.visit?.destination || 'Sin Habitación'}
-                            </span>
-                            <h4 className="font-extrabold text-sm text-white mt-1.5 tracking-tight group-hover:text-sky-300 transition-colors duration-300">
-                              {req.visit?.patientName || 'Paciente General'}
-                            </h4>
-                          </div>
 
-                          <div className="text-right">
-                            <span className="text-[10px] font-mono text-slate-500 block">
-                              Solicitud: {formattedTime}
-                            </span>
-                            <span className={`inline-block text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border mt-1 ${
-                              minutesElapsed > 20 
-                                ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 animate-pulse' 
-                                : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                            }`}>
-                              Hace {minutesElapsed} min
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Mid section: Doctor, Diagnosis and Nurse details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-950/50 border border-white/5 text-xs text-slate-400 mb-4">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Causa de Estancia</p>
-                            <p className="text-[11px] text-slate-300 font-semibold truncate">{req.visit?.reason || 'Ninguna'}</p>
-                            <p className="text-[9px] text-slate-500 mt-1 leading-none">Dr: {req.visit?.doctor?.name || 'No Asignado'}</p>
-                          </div>
-                          <div className="space-y-1 border-t md:border-t-0 md:border-l border-white/5 pt-2.5 md:pt-0 md:pl-3.5">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Solicitado Por</p>
-                            <p className="text-[11px] text-slate-300 font-semibold">Enf: {req.nurseName}</p>
-                            <p className="text-[9px] text-slate-500 mt-1 leading-none">ID Visita: {req.visitId.slice(0,8)}...</p>
-                          </div>
-                        </div>
-
-                        {/* Prescribed Medicines Box (High Visibility) */}
-                        <div className="space-y-2 mb-4">
-                          <p className="text-[10px] font-extrabold text-sky-400 uppercase tracking-widest leading-none flex items-center gap-1">
-                            <span>💊</span> Medicamentos e Indicación de Dosis
-                          </p>
-                          <div className="bg-sky-500/5 p-4 rounded-xl border border-sky-500/15 text-xs text-sky-100 font-bold leading-relaxed whitespace-pre-line shadow-inner">
-                            {req.medicines}
-                          </div>
-                        </div>
-
-                        {/* Deliver Action Button */}
-                        <div className="flex justify-end pt-2 border-t border-white/5">
-                          <button
-                            onClick={() => handleDispenseRequest(req.id)}
-                            className="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-black tracking-wider uppercase flex items-center gap-2 cursor-pointer shadow-[0_4px_15px_rgba(14,165,233,0.3)] hover:shadow-[0_4px_25px_rgba(14,165,233,0.5)] active:scale-97 transition-all duration-300"
-                          >
-                            <Check className="w-4 h-4 stroke-[3px]" />
-                            Despachar y Entregar
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="p-4 rounded-xl bg-slate-950/35 border border-white/5 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Despachadas con Éxito</p>
+                    <p className="text-2xl font-black text-emerald-400 mt-1 tracking-tight">{deliveredRequests.length}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
+                  </div>
                 </div>
-              )}
-            </div>
 
-            {/* Right Column: Delivered Audit Log */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-white/5">
-                <h3 className="text-sm font-extrabold text-slate-300 tracking-wider uppercase Outfit flex items-center gap-2">
-                  <CheckCircle className="w-4.5 h-4.5 text-emerald-400" />
-                  Bitácora de Entregas Recientes ({deliveredRequests.length})
-                </h3>
+                <div className="p-4 rounded-xl bg-slate-950/35 border border-white/5 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Histórico</p>
+                    <p className="text-2xl font-black text-white mt-1 tracking-tight">{pharmacyRequests.length}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center border border-white/10">
+                    <Pill className="w-5 h-5 text-slate-300" />
+                  </div>
+                </div>
               </div>
 
-              {deliveredRequests.length === 0 ? (
-                <div className="p-8 text-center rounded-xl bg-slate-950/15 border border-dashed border-white/5 text-slate-500 flex flex-col items-center justify-center gap-2">
-                  <p className="text-xs">Sin despachos registrados hoy.</p>
-                </div>
-              ) : (
-                <div className="space-y-3.5 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
-                  {deliveredRequests.map((req) => {
-                    const deliveredDate = req.dispensedAt ? new Date(req.dispensedAt) : new Date();
-                    const formattedDelivered = deliveredDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + deliveredDate.toLocaleDateString();
-                    
-                    return (
-                      <div 
-                        key={req.id} 
-                        className="p-4 rounded-xl bg-slate-950/40 border border-emerald-500/10 space-y-3 hover:border-emerald-500/20 transition-all duration-300 shadow-md relative overflow-hidden"
-                      >
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
-                        
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <span className="font-extrabold text-xs text-white block">
-                              🚪 {req.visit?.destination || 'N/A'} — {req.visit?.patientName || 'Paciente'}
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1 block">
-                              Entregado a Enfermería
-                            </span>
-                          </div>
-                          
-                          <span className="text-[9px] font-extrabold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                            ✓ Entregado
-                          </span>
-                        </div>
+              {/* Grid Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
+                
+                {/* Left Column: Pending Cola */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                    <h3 className="text-sm font-extrabold text-white tracking-wider uppercase Outfit flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+                      Cola de Despacho Inmediato ({pendingRequests.length})
+                    </h3>
+                  </div>
 
-                        <div className="bg-slate-950/60 p-2.5 rounded-lg border border-white/5 text-[11px] text-slate-400 font-mono italic font-bold">
-                          {req.medicines}
-                        </div>
-
-                        <div className="pt-2 border-t border-white/5 flex flex-col gap-1 text-[9px] font-mono text-slate-500">
-                          <div className="flex items-center justify-between">
-                            <span>Despachó:</span>
-                            <span className="text-emerald-400 font-bold">{req.dispensedBy}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>Hora de Entrega:</span>
-                            <span>{formattedDelivered}</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span>Origen Solicitud:</span>
-                            <span>{req.nurseName}</span>
-                          </div>
-                        </div>
+                  {pendingRequests.length === 0 ? (
+                    <div className="p-12 text-center rounded-2xl bg-slate-950/20 border border-dashed border-white/10 flex flex-col items-center justify-center gap-4">
+                      <div className="w-16 h-16 rounded-full bg-emerald-500/5 border border-emerald-500/10 flex items-center justify-center">
+                        <CheckCircle className="w-8 h-8 text-emerald-400/80 animate-bounce" />
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                      <div>
+                        <h4 className="text-sm font-extrabold text-white">¡Gran trabajo! Sin solicitudes pendientes</h4>
+                        <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                          Todas las recetas y solicitudes de enfermería han sido debidamente suministradas y registradas en el sistema.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                      {pendingRequests.map((req) => {
+                        const reqDate = new Date(req.createdAt);
+                        const formattedTime = reqDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const minutesElapsed = Math.floor((new Date() - reqDate) / 60000);
+                        
+                        return (
+                          <div 
+                            key={req.id} 
+                            className="p-5 rounded-2xl bg-gradient-to-br from-slate-950/80 to-slate-900/50 border border-white/5 hover:border-sky-500/30 transition-all duration-300 shadow-xl relative overflow-hidden group hover:shadow-[0_0_20px_rgba(14,165,233,0.05)]"
+                          >
+                            {/* Status stripe accent */}
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 group-hover:bg-sky-500 transition-colors duration-300"></div>
+                            
+                            {/* Upper Row: Room, Name, Elapsed badge */}
+                            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                              <div className="space-y-1">
+                                <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase bg-sky-950 border border-sky-400/20 text-sky-300 flex items-center gap-1 w-max">
+                                  <Bed className="w-3 h-3" /> {req.visit?.destination || 'Sin Habitación'}
+                                </span>
+                                <h4 className="font-extrabold text-sm text-white mt-1.5 tracking-tight group-hover:text-sky-300 transition-colors duration-300">
+                                  {req.visit?.patientName || 'Paciente General'}
+                                </h4>
+                              </div>
 
-          </div>
+                              <div className="text-right">
+                                <span className="text-[10px] font-mono text-slate-500 block">
+                                  Solicitud: {formattedTime}
+                                </span>
+                                <span className={`inline-block text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full border mt-1 ${
+                                  minutesElapsed > 20 
+                                    ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 animate-pulse' 
+                                    : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
+                                }`}>
+                                  Hace {minutesElapsed} min
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Mid section: Doctor, Diagnosis and Nurse details */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3.5 rounded-xl bg-slate-950/50 border border-white/5 text-xs text-slate-400 mb-4">
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Causa de Estancia</p>
+                                <p className="text-[11px] text-slate-300 font-semibold truncate">{req.visit?.reason || 'Ninguna'}</p>
+                                <p className="text-[9px] text-slate-500 mt-1 leading-none">Dr: {req.visit?.doctor?.name || 'No Asignado'}</p>
+                              </div>
+                              <div className="space-y-1 border-t md:border-t-0 md:border-l border-white/5 pt-2.5 md:pt-0 md:pl-3.5">
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Solicitado Por</p>
+                                <p className="text-[11px] text-slate-300 font-semibold">Enf: {req.nurseName}</p>
+                                <p className="text-[9px] text-slate-500 mt-1 leading-none">ID Visita: {req.visitId.slice(0,8)}...</p>
+                              </div>
+                            </div>
+
+                            {/* Prescribed Medicines Box (High Visibility) */}
+                            <div className="space-y-2 mb-4">
+                              <p className="text-[10px] font-extrabold text-sky-400 uppercase tracking-widest leading-none flex items-center gap-1">
+                                <span>💊</span> Medicamentos e Indicación de Dosis
+                              </p>
+                              <div className="bg-sky-500/5 p-4 rounded-xl border border-sky-500/15 text-xs text-sky-100 font-bold leading-relaxed whitespace-pre-line shadow-inner">
+                                {req.medicines}
+                              </div>
+                            </div>
+
+                            {/* Deliver Action Button */}
+                            <div className="flex justify-end pt-2 border-t border-white/5">
+                              <button
+                                onClick={() => handleDispenseRequest(req.id)}
+                                className="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-xs font-black tracking-wider uppercase flex items-center gap-2 cursor-pointer shadow-[0_4px_15px_rgba(14,165,233,0.3)] hover:shadow-[0_4px_25px_rgba(14,165,233,0.5)] active:scale-97 transition-all duration-300"
+                              >
+                                <Check className="w-4 h-4 stroke-[3px]" />
+                                Despachar y Entregar
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column: Delivered Audit Log */}
+                <div className="lg:col-span-5 space-y-4">
+                  <div className="flex items-center justify-between pb-2 border-b border-white/5">
+                    <h3 className="text-sm font-extrabold text-slate-300 tracking-wider uppercase Outfit flex items-center gap-2">
+                      <CheckCircle className="w-4.5 h-4.5 text-emerald-400" />
+                      Bitácora de Entregas Recientes ({deliveredRequests.length})
+                    </h3>
+                  </div>
+
+                  {deliveredRequests.length === 0 ? (
+                    <div className="p-8 text-center rounded-xl bg-slate-950/15 border border-dashed border-white/5 text-slate-500 flex flex-col items-center justify-center gap-2">
+                      <p className="text-xs">Sin despachos registrados hoy.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3.5 max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
+                      {deliveredRequests.map((req) => {
+                        const deliveredDate = req.dispensedAt ? new Date(req.dispensedAt) : new Date();
+                        const formattedDelivered = deliveredDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + deliveredDate.toLocaleDateString();
+                        
+                        return (
+                          <div 
+                            key={req.id} 
+                            className="p-4 rounded-xl bg-slate-950/40 border border-emerald-500/10 space-y-3 hover:border-emerald-500/20 transition-all duration-300 shadow-md relative overflow-hidden"
+                          >
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500"></div>
+                            
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="font-extrabold text-xs text-white block">
+                                  🚪 {req.visit?.destination || 'N/A'} — {req.visit?.patientName || 'Paciente'}
+                                </span>
+                                <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1 block">
+                                  Entregado a Enfermería
+                                </span>
+                              </div>
+                              
+                              <span className="text-[9px] font-extrabold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                ✓ Entregado
+                              </span>
+                            </div>
+
+                            <div className="bg-slate-950/60 p-2.5 rounded-lg border border-white/5 text-[11px] text-slate-400 font-mono italic font-bold">
+                              {req.medicines}
+                            </div>
+
+                            <div className="pt-2 border-t border-white/5 flex flex-col gap-1 text-[9px] font-mono text-slate-500">
+                              <div className="flex items-center justify-between">
+                                <span>Despachó:</span>
+                                <span className="text-emerald-400 font-bold">{req.dispensedBy}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span>Hora de Entrega:</span>
+                                <span>{formattedDelivered}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span>Origen Solicitud:</span>
+                                <span>{req.nurseName}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </>
+          ) : (
+            /* ========================================================
+               INVENTORY & MEDICATIONS CATALOG SUB-TAB
+               ======================================================== */
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fadeIn">
+              
+              {/* Left Column: Form to Add Medications */}
+              <div className="lg:col-span-4 glass-panel rounded-2xl p-6 h-max">
+                <h3 className="font-extrabold text-white text-sm border-b border-white/5 pb-3 mb-4 flex items-center gap-2 Outfit">
+                  <Plus className="w-4 h-4 text-sky-400" />
+                  Registrar Medicamento
+                </h3>
+                
+                <form onSubmit={handleCreateMedication} className="space-y-4 text-left text-xs">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Nombre del Medicamento</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Paracetamol 500mg"
+                      value={newMedName}
+                      onChange={(e) => setNewMedName(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Descripción / Uso Clínico</label>
+                    <textarea
+                      rows="3"
+                      placeholder="Ej. Indicado para fiebre y alivio del dolor corporal..."
+                      value={newMedDesc}
+                      onChange={(e) => setNewMedDesc(e.target.value)}
+                      className="w-full p-3 rounded-lg glass-input text-xs resize-none border border-white/5 bg-slate-950/40 text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Categoría</label>
+                      <select
+                        value={newMedCategory}
+                        onChange={(e) => setNewMedCategory(e.target.value)}
+                        className="w-full h-10 px-2 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                      >
+                        {['Analgésico', 'Antiinflamatorio', 'Antibiótico', 'Cardiovascular', 'Endocrino', 'Antihistamínico', 'Respiratorio', 'Gastrointestinal', 'Corticoesteroide', 'Ansiolítico'].map(c => (
+                          <option key={c} value={c} className="bg-slate-950 text-white">{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Presentación / Unidad</label>
+                      <select
+                        value={newMedUnit}
+                        onChange={(e) => setNewMedUnit(e.target.value)}
+                        className="w-full h-10 px-2 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                      >
+                        {['Cajas', 'Frascos', 'Ampollas', 'Viales', 'Inhaladores'].map(u => (
+                          <option key={u} value={u} className="bg-slate-950 text-white">{u}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Existencia Inicial (Stock)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={newMedStock}
+                      onChange={(e) => setNewMedStock(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full h-11 rounded-xl text-slate-950 font-black uppercase tracking-wider text-[10px] bg-sky-500 hover:bg-sky-400 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2 shadow-[0_4px_15px_rgba(14,165,233,0.25)]"
+                  >
+                    <Plus className="w-4 h-4 stroke-[3px]" />
+                    Agregar al Catálogo
+                  </button>
+                </form>
+              </div>
+
+              {/* Right Column: Medications Search & Catalog Grid */}
+              <div className="lg:col-span-8 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-3">
+                  <h3 className="font-extrabold text-white text-sm tracking-wider uppercase Outfit flex items-center gap-2">
+                    <Pill className="w-4.5 h-4.5 text-sky-400" />
+                    Catálogo de Farmacia ({filteredMeds.length})
+                  </h3>
+                  
+                  {/* High-fidelity Search Input */}
+                  <div className="relative w-full sm:max-w-xs">
+                    <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3.5" />
+                    <input
+                      type="text"
+                      placeholder="Buscar por nombre o categoría..."
+                      value={medicationSearch}
+                      onChange={(e) => setMedicationSearch(e.target.value)}
+                      className="w-full h-10 pl-9 pr-4 rounded-xl glass-input text-xs border border-white/5 bg-slate-950/40 text-white shadow-inner"
+                    />
+                  </div>
+                </div>
+
+                {filteredMeds.length === 0 ? (
+                  <div className="p-16 text-center rounded-2xl bg-slate-950/20 border border-dashed border-white/10 flex flex-col items-center justify-center gap-4 text-slate-500">
+                    <Search className="w-10 h-10" />
+                    <p className="text-xs">No se encontraron medicamentos que coincidan con la búsqueda.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                    {filteredMeds.map((med) => {
+                      const hasStock = med.stock > 0;
+                      return (
+                        <div
+                          key={med.id}
+                          className="p-4 rounded-xl bg-slate-950/50 border border-white/5 hover:border-sky-500/20 transition-all duration-300 flex flex-col justify-between gap-3 shadow-md relative overflow-hidden group"
+                        >
+                          {/* Stock color accent on top */}
+                          <div className={`absolute top-0 left-0 right-0 h-0.5 ${hasStock ? 'bg-sky-500' : 'bg-rose-500'}`}></div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="font-extrabold text-xs text-white block truncate leading-tight group-hover:text-sky-300 transition-colors">
+                                {med.name}
+                              </span>
+                              <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-sky-950/80 border border-sky-400/20 text-sky-400 shrink-0">
+                                {med.category}
+                              </span>
+                            </div>
+                            
+                            {med.description ? (
+                              <p className="text-[10px] text-slate-400 italic leading-snug truncate line-clamp-2 h-7 whitespace-normal">
+                                "{med.description}"
+                              </p>
+                            ) : (
+                              <p className="text-[10px] text-slate-600 italic h-7 leading-snug">
+                                Sin descripción clínica.
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between border-t border-white/5 pt-3">
+                            <div>
+                              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest leading-none">Disponible</p>
+                              <p className={`text-base font-black mt-1 leading-none ${hasStock ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {med.stock} <span className="text-[10px] font-bold text-slate-400">{med.unit}</span>
+                              </p>
+                            </div>
+
+                            {/* Stock increment/decrement & delete actions */}
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleUpdateStock(med.id, med.stock, -1)}
+                                disabled={med.stock <= 0}
+                                className="w-8 h-8 rounded-lg border border-white/5 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white font-bold text-sm cursor-pointer flex items-center justify-center transition-all disabled:opacity-30"
+                                title="Disminuir existencia en 1"
+                              >
+                                -
+                              </button>
+                              <button
+                                onClick={() => handleUpdateStock(med.id, med.stock, 1)}
+                                className="w-8 h-8 rounded-lg border border-white/5 hover:border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-white font-bold text-sm cursor-pointer flex items-center justify-center transition-all"
+                                title="Incrementar existencia en 1"
+                              >
+                                +
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMedication(med.id)}
+                                className="w-8 h-8 rounded-lg border border-rose-500/10 hover:border-rose-500/35 bg-rose-500/5 hover:bg-rose-500/15 text-rose-400 cursor-pointer flex items-center justify-center transition-all"
+                                title="Eliminar medicamento"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
 
         </main>
 
@@ -2596,14 +2931,15 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const [visitsRes, rolesRes, usersRes, clinicsRes, doctorsRes, roomsRes, pharmacyRes] = await Promise.all([
+      const [visitsRes, rolesRes, usersRes, clinicsRes, doctorsRes, roomsRes, pharmacyRes, medicationsRes] = await Promise.all([
         fetch('/api/visits').then(r => r.json()),
         fetch('/api/roles').then(r => r.json()),
         fetch('/api/users').then(r => r.json()),
         fetch('/api/clinics').then(r => r.json()),
         fetch('/api/doctors').then(r => r.json()),
         fetch('/api/rooms').then(r => r.json()),
-        fetch('/api/pharmacy-requests').then(r => r.json())
+        fetch('/api/pharmacy-requests').then(r => r.json()),
+        fetch('/api/medications').then(r => r.json())
       ]);
 
       if (visitsRes.success) setVisits(visitsRes.visits);
@@ -2613,6 +2949,7 @@ export default function DashboardPage() {
       if (doctorsRes.success) setDoctors(doctorsRes.doctors);
       if (roomsRes.success) setRooms(roomsRes.rooms);
       if (pharmacyRes.success) setPharmacyRequests(pharmacyRes.requests);
+      if (medicationsRes.success) setMedications(medicationsRes.medications);
     } catch (err) {
       console.error('Error fetching dashboard lists:', err);
     }
