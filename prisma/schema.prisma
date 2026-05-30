@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g. "administrador", "manager", "guardia", "medico", "usuario", "visitante"
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  users       User[]
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String   // Hashed password
+  name      String   // Full name
+  roleId    String
+  role      Role     @relation(fields: [roleId], references: [id])
+  doctor    Doctor?  @relation
+  isPresent Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Clinic {
+  id          String   @id @default(uuid())
+  name        String   @unique // e.g. "Consultorio 101"
+  specialty   String   // e.g. "Cardiología", "Pediatría"
+  floor       String?  // e.g. "Piso 1"
+  doctors     Doctor[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Doctor {
+  id           String   @id @default(uuid())
+  name         String   // Doctor's full name
+  specialty    String   // Specialty
+  workingHours String?  // Horarios de atención
+  email        String?
+  phone        String?
+  whatsapp     String?
+  clinicId     String?
+  clinic       Clinic?  @relation(fields: [clinicId], references: [id])
+  userId       String?  @unique
+  user         User?    @relation(fields: [userId], references: [id])
+  visits       Visit[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Visit {
+  id              String    @id @default(uuid())
+  patientName     String    // Patient / Visitor name
+  email           String?   // Patient / Visitor email (for history lookups)
+  phone           String?   // Patient phone number
+  type            String    // "visitante", "paciente", "urgencias", "hospitalizaciones"
+  destination     String    // E.g. "Consultorio 101", "Urgencias", "Habitación 204"
+  reason          String    // Motivo de la visita
+  visitorCompanion String?   // Con quién va (acompañante)
+  
+  // Clinical data fields
+  ailments        String?   // Symptoms/diagnosis written by doctor
+  medicines       String?   // Prescription / medicines written by doctor
+  followUp        String?   // Follow-up notes/recommendations
+  
+  // Appointment data fields
+  isAppointment   Boolean   @default(false)
+  appointmentDate DateTime?
+  qrToken         String?   @unique // Secure unique QR identifier
+  
+  status          String    @default("in house") // "agendado", "in house", "fuera"
+  checkInTime     DateTime  @default(now())
+  checkOutTime    DateTime?
+  doctorId        String?
+  doctor          Doctor?   @relation(fields: [doctorId], references: [id])
+  nurseLogs       NurseLog[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Room {
+  id        String   @id @default(uuid())
+  number    String   @unique // e.g. "Habitación 302-A"
+  floor     String   // e.g. "Piso 3"
+  type      String   // e.g. "Individual", "Doble", "UCI"
+  status    String   @default("disponible") // "disponible", "ocupado", "mantenimiento"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NurseLog {
+  id          String   @id @default(uuid())
+  visitId     String
+  visit       Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  nurseName   String   // Name of the nurse who checked the patient
+  treatments  String   // Treatments administered
+  medicines   String   // Medications administered
+  indications String   // Clinical indications
+  loggedAt    DateTime @default(now()) // Timestamp when it was administered / reviewed
+  createdAt   DateTime @default(now())
+}
