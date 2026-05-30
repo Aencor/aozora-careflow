@@ -2625,7 +2625,7 @@ export default function DashboardPage() {
     return renderNursePortal();
   }
 
-  if (authLoading) {
+  if (authLoading || !session) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-[#090d16]">
         <Activity className="w-10 h-10 text-emerald-400 pulse-glow mb-4" />
