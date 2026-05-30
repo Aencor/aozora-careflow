@@ -1050,6 +1050,29 @@ export default function DashboardPage() {
                     {/* Direct Pharmacy Request Form */}
                     <div className="p-3.5 rounded-xl bg-sky-950/20 border border-sky-500/10 space-y-2">
                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Nueva Solicitud Directa a Farmacia</p>
+                      
+                      <select
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val) {
+                            const inputEl = document.getElementById('direct-medicine-input');
+                            if (inputEl) {
+                              inputEl.value = val + ' ';
+                              inputEl.focus();
+                            }
+                            e.target.value = '';
+                          }
+                        }}
+                        className="w-full p-2.5 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-350 cursor-pointer"
+                      >
+                        <option value="">-- Seleccionar Medicamento rápido... --</option>
+                        {medications.map(med => (
+                          <option key={med.id} value={med.name} className="bg-slate-950 text-white">
+                            {med.name} ({med.category}) - Stock: {med.stock} {med.unit}
+                          </option>
+                        ))}
+                      </select>
+
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -1203,6 +1226,23 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-1.5">Medicamentos / Soluciones Administradas <span className="text-indigo-400">*</span></label>
+                  <select
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val) {
+                        setNewMedicines(prev => prev ? prev + '\n' + val : val);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="w-full mb-2 p-2.5 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-300 cursor-pointer"
+                  >
+                    <option value="">-- Seleccionar del Catálogo ({medications.length} disponibles) --</option>
+                    {medications.map(med => (
+                      <option key={med.id} value={med.name} className="bg-slate-950 text-white">
+                        {med.name} ({med.category}) - Stock: {med.stock} {med.unit}
+                      </option>
+                    ))}
+                  </select>
                   <textarea required rows="3" placeholder="Ej. Cloruro de Sodio 0.9% 500ml IV..." value={newMedicines} onChange={(e) => setNewMedicines(e.target.value)} className="w-full p-3 rounded-lg glass-input text-xs resize-none" />
                 </div>
                 <div>
