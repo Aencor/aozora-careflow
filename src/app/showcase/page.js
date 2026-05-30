@@ -1149,13 +1149,14 @@ export default function ShowcasePage() {
               Hemos preparado un dossier comercial completo que detalla el Retorno de Inversión (ROI), la tabla comparativa de flujos tradicionales de papel vs digital, y el plan de seguridad de accesos del hospital.
             </p>
             <div className="pt-2">
-              <Link 
-                href="file:///Users/kike/.gemini/antigravity/brain/9c7f7248-c4e5-4454-aca5-120f82778d61/PRODUCT_SHOWCASE_SALES_KIT.md"
+              <a 
+                href="/PRODUCT_SHOWCASE_SALES_KIT.md"
+                download="PRODUCT_SHOWCASE_SALES_KIT.md"
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-slate-700 bg-slate-900/60 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800/60 text-xs font-bold transition-all duration-300"
               >
                 <Download className="w-4 h-4 text-emerald-400" />
-                <span>Abrir Sales Kit Comercial de Producto</span>
-              </Link>
+                <span>Descargar Sales Kit Comercial de Producto</span>
+              </a>
             </div>
           </div>
         </section>
