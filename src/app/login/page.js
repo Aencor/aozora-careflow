@@ -53,7 +53,7 @@ export default function LoginPage() {
       {/* Back to Home Link */}
       <Link 
         href="/"
-        className="absolute top-6 left-6 flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors py-2 px-3 rounded-lg border border-white/5 bg-slate-900/40 hover:bg-slate-800/40"
+        className="mb-6 sm:absolute sm:top-6 sm:left-6 flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors py-2 px-3 rounded-lg border border-white/5 bg-slate-900/40 hover:bg-slate-800/40"
       >
         <ArrowLeft className="w-4 h-4" />
         <span>Volver al Portal Público</span>

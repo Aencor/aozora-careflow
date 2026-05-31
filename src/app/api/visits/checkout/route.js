@@ -2,7 +2,10 @@ import prisma from '@/lib/prisma';
 
 export async function POST(request) {
   try {
-    const { visitId, ailments, medicines, followUp } = await request.json();
+    const { 
+      visitId, ailments, medicines, followUp,
+      age, gender, chronicConditions, allergies, currentMedications, lastMenstrualPeriod 
+    } = await request.json();
 
     if (!visitId) {
       return Response.json(
@@ -39,6 +42,12 @@ export async function POST(request) {
         ailments: ailments ? ailments.trim() : undefined,
         medicines: medicines ? medicines.trim() : undefined,
         followUp: followUp ? followUp.trim() : undefined,
+        age: age !== undefined ? (age !== null ? parseInt(age) : null) : undefined,
+        gender: gender !== undefined ? gender : undefined,
+        chronicConditions: chronicConditions !== undefined ? chronicConditions : undefined,
+        allergies: allergies !== undefined ? allergies : undefined,
+        currentMedications: currentMedications !== undefined ? currentMedications : undefined,
+        lastMenstrualPeriod: lastMenstrualPeriod !== undefined ? (lastMenstrualPeriod ? new Date(lastMenstrualPeriod) : null) : undefined,
       },
     });
 

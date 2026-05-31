@@ -45,7 +45,8 @@ export async function POST(request) {
   try {
     const { 
       patientName, email, phone, type, destination, reason, 
-      visitorCompanion, doctorId, isAppointment, appointmentDate 
+      visitorCompanion, doctorId, isAppointment, appointmentDate,
+      age, gender, chronicConditions, allergies, currentMedications, lastMenstrualPeriod
     } = await request.json();
 
     if (!patientName || !type || !destination || !reason) {
@@ -72,6 +73,12 @@ export async function POST(request) {
           appointmentDate: new Date(appointmentDate),
           qrToken,
           doctorId: doctorId || null,
+          age: age ? parseInt(age) : null,
+          gender: gender || null,
+          chronicConditions: chronicConditions || null,
+          allergies: allergies || null,
+          currentMedications: currentMedications || null,
+          lastMenstrualPeriod: lastMenstrualPeriod ? new Date(lastMenstrualPeriod) : null,
         },
         include: {
           doctor: true,
@@ -98,6 +105,12 @@ export async function POST(request) {
         status: 'in house', // Hidden field: default to in house
         checkInTime: new Date(), // Hidden field: actual timestamp
         doctorId: doctorId || null,
+        age: age ? parseInt(age) : null,
+        gender: gender || null,
+        chronicConditions: chronicConditions || null,
+        allergies: allergies || null,
+        currentMedications: currentMedications || null,
+        lastMenstrualPeriod: lastMenstrualPeriod ? new Date(lastMenstrualPeriod) : null,
       },
       include: {
         doctor: true,
@@ -121,7 +134,11 @@ export async function POST(request) {
 // PUT: Update an existing visit (e.g. promoting emergency to hospitalization)
 export async function PUT(request) {
   try {
-    const { id, type, destination, doctorId, ailments, status } = await request.json();
+    const { 
+      id, type, destination, doctorId, ailments, status,
+      age, gender, chronicConditions, allergies, currentMedications, lastMenstrualPeriod,
+      patientName, email, phone, visitorCompanion, reason
+    } = await request.json();
 
     if (!id) {
       return Response.json(
@@ -147,6 +164,17 @@ export async function PUT(request) {
     if (doctorId !== undefined) updateData.doctorId = doctorId;
     if (ailments !== undefined) updateData.ailments = ailments.trim();
     if (status) updateData.status = status;
+    if (age !== undefined) updateData.age = age !== null ? parseInt(age) : null;
+    if (gender !== undefined) updateData.gender = gender;
+    if (chronicConditions !== undefined) updateData.chronicConditions = chronicConditions;
+    if (allergies !== undefined) updateData.allergies = allergies;
+    if (currentMedications !== undefined) updateData.currentMedications = currentMedications;
+    if (lastMenstrualPeriod !== undefined) updateData.lastMenstrualPeriod = lastMenstrualPeriod ? new Date(lastMenstrualPeriod) : null;
+    if (patientName) updateData.patientName = patientName.trim();
+    if (email !== undefined) updateData.email = email ? email.toLowerCase().trim() : null;
+    if (phone !== undefined) updateData.phone = phone ? phone.trim() : null;
+    if (visitorCompanion !== undefined) updateData.visitorCompanion = visitorCompanion ? visitorCompanion.trim() : null;
+    if (reason) updateData.reason = reason.trim();
 
     const updatedVisit = await prisma.visit.update({
       where: { id },

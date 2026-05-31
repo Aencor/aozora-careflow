@@ -36,6 +36,14 @@ export default function Home() {
   const [visitorCompanion, setVisitorCompanion] = useState('');
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
 
+  // Additional Patient Profile states
+  const [kioskAge, setKioskAge] = useState('');
+  const [kioskGender, setKioskGender] = useState('');
+  const [kioskChronicConditions, setKioskChronicConditions] = useState('');
+  const [kioskAllergies, setKioskAllergies] = useState('');
+  const [kioskCurrentMedications, setKioskCurrentMedications] = useState('');
+  const [kioskLastMenstrualPeriod, setKioskLastMenstrualPeriod] = useState('');
+
   // Handle email autocomplete lookup
   const handleEmailBlur = async () => {
     if (!patientEmail.trim() || !patientEmail.includes('@')) return;
@@ -48,7 +56,13 @@ export default function Home() {
         if (!patientName) setPatientName(data.visit.patientName);
         if (!patientPhone) setPatientPhone(data.visit.phone || '');
         if (!visitorCompanion) setVisitorCompanion(data.visit.visitorCompanion || '');
-        triggerNotification('success', '¡Historial encontrado! Pre-cargamos tus datos básicos.');
+        if (data.visit.age) setKioskAge(data.visit.age.toString());
+        if (data.visit.gender) setKioskGender(data.visit.gender);
+        if (data.visit.chronicConditions) setKioskChronicConditions(data.visit.chronicConditions);
+        if (data.visit.allergies) setKioskAllergies(data.visit.allergies);
+        if (data.visit.currentMedications) setKioskCurrentMedications(data.visit.currentMedications);
+        if (data.visit.lastMenstrualPeriod) setKioskLastMenstrualPeriod(data.visit.lastMenstrualPeriod.slice(0, 10));
+        triggerNotification('success', '¡Historial encontrado! Pre-cargamos tus datos básicos y antecedentes.');
       }
     } catch (err) {
       console.error('Error during email autocomplete lookup:', err);
@@ -288,7 +302,13 @@ export default function Home() {
           destination,
           reason,
           visitorCompanion: visitorCompanion || null,
-          doctorId: selectedDoctorId || null
+          doctorId: selectedDoctorId || null,
+          age: kioskAge ? parseInt(kioskAge) : null,
+          gender: kioskGender || null,
+          chronicConditions: kioskChronicConditions || null,
+          allergies: kioskAllergies || null,
+          currentMedications: kioskCurrentMedications || null,
+          lastMenstrualPeriod: kioskLastMenstrualPeriod || null
         })
       });
 
@@ -303,6 +323,12 @@ export default function Home() {
         setReason('');
         setVisitorCompanion('');
         setSelectedDoctorId('');
+        setKioskAge('');
+        setKioskGender('');
+        setKioskChronicConditions('');
+        setKioskAllergies('');
+        setKioskCurrentMedications('');
+        setKioskLastMenstrualPeriod('');
         // Refresh active visits list for check-out
         fetchData();
       } else {
@@ -453,7 +479,7 @@ export default function Home() {
         </div>
 
         {/* Mobile View Toggle Switcher */}
-        <div className="flex sm:hidden p-1 bg-slate-900/60 rounded-xl border border-white/5 mb-6">
+        <div className="flex lg:hidden p-1 bg-slate-900/60 rounded-xl border border-white/5 mb-6">
           <button 
             onClick={() => setActiveTab('checkin')}
             className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
@@ -568,6 +594,98 @@ export default function Home() {
                   className="w-full h-11 px-4 rounded-lg glass-input text-sm"
                 />
               </div>
+
+              {/* Optional Clinical Profile Section for Patients/Urgencies/Hospitalizations */}
+              {visitType !== 'visitante' && (
+                <div className="p-5 rounded-xl border border-white/5 bg-slate-950/40 space-y-4 text-left animate-fadeIn">
+                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-white/5 pb-2 mb-2">
+                    <Activity className="w-4 h-4 text-emerald-400" />
+                    Antecedentes Clínicos (Opcional)
+                  </h4>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Age */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Edad</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        placeholder="Años"
+                        value={kioskAge}
+                        onChange={(e) => setKioskAge(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                      />
+                    </div>
+
+                    {/* Gender */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Sexo</label>
+                      <select
+                        value={kioskGender}
+                        onChange={(e) => setKioskGender(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-350"
+                      >
+                        <option value="">-- Seleccionar --</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                      </select>
+                    </div>
+
+                    {/* FUM Date */}
+                    <div>
+                      <label className={`block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1 ${kioskGender === 'Femenino' ? 'text-indigo-400' : 'opacity-40'}`}>
+                        Última Menstruación (FUM)
+                      </label>
+                      <input 
+                        type="date" 
+                        disabled={kioskGender !== 'Femenino'}
+                        value={kioskLastMenstrualPeriod}
+                        onChange={(e) => setKioskLastMenstrualPeriod(e.target.value)}
+                        className={`w-full h-10 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white ${kioskGender !== 'Femenino' ? 'opacity-40 cursor-not-allowed' : ''}`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Allergies */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Alergias</label>
+                      <input 
+                        type="text" 
+                        placeholder="Polvo, Penicilina..."
+                        value={kioskAllergies}
+                        onChange={(e) => setKioskAllergies(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                      />
+                    </div>
+
+                    {/* Chronic Conditions */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Condiciones Crónicas / Especiales</label>
+                      <input 
+                        type="text" 
+                        placeholder="Hipertensión, Diabetes..."
+                        value={kioskChronicConditions}
+                        onChange={(e) => setKioskChronicConditions(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                      />
+                    </div>
+
+                    {/* Current Medications */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Medicamentos Actuales</label>
+                      <input 
+                        type="text" 
+                        placeholder="Metformina 850mg..."
+                        value={kioskCurrentMedications}
+                        onChange={(e) => setKioskCurrentMedications(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Dynamic Fields based on Visit Type */}
               {visitType === 'paciente' ? (
@@ -931,7 +1049,7 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-xs pt-2 border-t border-white/5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs pt-2 border-t border-white/5">
                     <div>
                       <p className="text-slate-400 mb-0.5 uppercase tracking-wider text-[9px] font-bold">Lugar de Destino</p>
                       <p className="text-slate-200 font-medium flex items-center gap-1.5">

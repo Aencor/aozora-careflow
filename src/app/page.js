@@ -12,7 +12,8 @@ import {
   Lock,
   HeartHandshake,
   CheckCircle2,
-  FileText
+  FileText,
+  Pill
 } from 'lucide-react';
 
 export default function Home() {
@@ -26,37 +27,37 @@ export default function Home() {
 
       {/* Header */}
       <header className="glass-panel border-b border-white/5 sticky top-0 z-40 bg-[#070b13]/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/30 shadow-[0_0_15px_rgba(56,189,248,0.15)]">
-              <Activity className="w-5.5 h-5.5 text-sky-400 animate-pulse" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/30 shadow-[0_0_15px_rgba(56,189,248,0.15)]">
+              <Activity className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-sky-400 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5 font-display">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1 sm:gap-1.5 font-display">
                 Aozora <span className="text-sky-400 font-extrabold">Care-Flow</span>
               </h1>
-              <p className="text-[9px] text-slate-400 uppercase tracking-widest font-semibold">Trazabilidad & Seguridad Clínica</p>
+              <p className="text-[8px] sm:text-[9px] text-slate-400 uppercase tracking-widest font-semibold">Trazabilidad & Seguridad Clínica</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link 
               href="/kiosk"
-              className="hidden sm:inline-flex items-center h-9 px-4 text-xs font-bold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 transition-all duration-300"
+              className="hidden sm:inline-flex items-center h-9 px-3 sm:px-4 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 transition-all duration-300"
             >
               Quiosco Público
             </Link>
-
+ 
             <Link 
               href="/login"
-              className="inline-flex items-center h-9 px-4 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 transition-all duration-300"
+              className="inline-flex items-center h-9 px-2.5 sm:px-4 text-[10px] sm:text-xs font-semibold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 transition-all duration-300"
             >
               Acceso Personal
             </Link>
-
+ 
             <Link 
               href="/showcase"
-              className="inline-flex items-center h-9 px-4 text-xs font-extrabold uppercase tracking-wider rounded-lg bg-sky-500 text-slate-950 hover:bg-sky-400 transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] glow-btn-sky"
+              className="inline-flex items-center h-9 px-2.5 sm:px-4 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider rounded-lg bg-sky-500 text-slate-950 hover:bg-sky-400 transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] glow-btn-sky"
             >
               Demo En Vivo
             </Link>
@@ -100,7 +101,7 @@ export default function Home() {
 
       {/* THE STORY (Human Core) */}
       <section className="max-w-4xl w-full mx-auto px-6 pb-24">
-        <div className="glass-panel p-8 sm:p-10 rounded-3xl border border-indigo-500/10 relative overflow-hidden bg-gradient-to-br from-[#0c1222] via-[#070b13] to-[#070b13] shadow-2xl">
+        <div className="glass-panel p-6 sm:p-10 rounded-3xl border border-indigo-500/10 relative overflow-hidden bg-gradient-to-br from-[#0c1222] via-[#070b13] to-[#070b13] shadow-2xl">
           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl"></div>
           
           <div className="flex flex-col md:flex-row gap-8 items-start relative z-10 text-left">
@@ -114,7 +115,9 @@ export default function Home() {
               </h3>
               <p className="text-slate-300 text-xs sm:text-sm leading-relaxed italic font-light">
                 "Este proyecto nace de una experiencia personal profunda: un momento de extrema vulnerabilidad cuando mi hijo enfrentó complicaciones críticas al nacer debido a fallas de comunicación y la falta de trazabilidad clínica en tiempo real. 
-                De por sí, la estancia en un hospital es un momento sumamente difícil de incertidumbre y dolor para cualquier familia; añadir errores de coordinación o vacíos en el seguimiento clínico agrava esa carga de forma innecesaria.
+                Además del inmenso peligro para el recién nacido, la falta de coordinación y control en los accesos y relevos clínicos resultó en <strong className="text-sky-300">graves secuelas y complicaciones médicas severas principalmente para su madre</strong>. Estas fallas clínicas y administrativas no solo pusieron en riesgo su vida y salud física, sino que <strong className="text-sky-300">afectaron profundamente su salud mental y bienestar emocional</strong> debido a la desatención y la incertidumbre.
+                <br /><br />
+                De por sí, la estancia en un hospital es un momento de incertidumbre y dolor para cualquier familia; añadir errores de seguimiento o vacíos en el registro clínico agrava esa carga de forma intolerable. Es una vivencia sumamente difícil y traumática que <strong className="text-rose-400">no quisiéramos que se repitiera jamás para ninguna madre ni para ningún paciente</strong>.
                 <br /><br />
                 Aozora Care-Flow fue concebido bajo una promesa solemne: transformar la tecnología hospitalaria para evitar que otras familias pasen por problemas de este tipo. Es un ecosistema diseñado con amor y rigor técnico para salvaguardar la seguridad operativa del paciente, facilitando una estancia transparente, segura y libre de errores humanos prevenibles."
               </p>
@@ -191,6 +194,20 @@ export default function Home() {
             </div>
           </div>
 
+
+          {/* Card 5: Farmacia */}
+          <div className="glass-panel p-6 rounded-2xl border border-white/5 bg-[#090e1a]/40 hover:border-sky-500/20 transition-all duration-300 flex gap-4 md:col-span-2">
+            <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
+              <Pill className="w-5.5 h-5.5 text-sky-400" />
+            </div>
+            <div className="space-y-2">
+              <h4 className="text-white font-extrabold text-sm uppercase tracking-wider">Farmacia e Inventario Integrados</h4>
+              <p className="text-xs text-slate-400 font-light leading-relaxed">
+                La enfermera solicita medicamentos directamente desde el expediente del paciente. El farmacéutico los ve en su consola de despacho, los entrega y el inventario se descuenta en tiempo real. Cero llamadas, cero malentendidos, trazabilidad farmacológica completa desde la prescripción hasta la entrega.
+              </p>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -207,7 +224,7 @@ export default function Home() {
             Nuestra demo interactiva te permite simular en tiempo real el flujo completo de una visita ingresada por un **Guardia**, atendida por un **Médico**, cuidada por una **Enfermera** y monitoreada por el **Administrador**.
           </p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto pt-4 text-left">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto pt-4 text-left">
             <div className="p-4 bg-slate-950/40 border border-white/5 rounded-xl text-center space-y-1">
               <div className="text-sm">🛡️</div>
               <p className="text-[11px] font-bold text-white uppercase tracking-wider">Guardia</p>
@@ -222,6 +239,11 @@ export default function Home() {
               <div className="text-sm">💊</div>
               <p className="text-[11px] font-bold text-white uppercase tracking-wider">Enfermería</p>
               <p className="text-[9px] text-slate-500">Bitácora de cuidados</p>
+            </div>
+            <div className="p-4 bg-slate-950/40 border border-white/5 rounded-xl text-center space-y-1">
+              <div className="text-sm">🧪</div>
+              <p className="text-[11px] font-bold text-white uppercase tracking-wider">Farmacia</p>
+              <p className="text-[9px] text-slate-500">Despacho e inventario</p>
             </div>
             <div className="p-4 bg-slate-950/40 border border-white/5 rounded-xl text-center space-y-1">
               <div className="text-sm">📊</div>

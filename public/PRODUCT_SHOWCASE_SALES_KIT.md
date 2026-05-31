@@ -10,7 +10,9 @@ Este documento es una guía comercial y de producto completa, diseñada para equ
 
 Este proyecto nace de una experiencia personal profunda: un momento de extrema vulnerabilidad cuando el hijo de nuestro fundador enfrentó complicaciones críticas al nacer en un hospital debido a fallas de comunicación y la falta de trazabilidad clínica en tiempo real. 
 
-De por sí, la estancia en un hospital es un momento sumamente difícil de incertidumbre y dolor para cualquier familia; añadir errores administrativos o vacíos en el seguimiento clínico agrava esa carga de forma innecesaria.
+Además del inmenso peligro para el recién nacido, la falta de coordinación y control en los accesos y los relevos clínicos resultó en **graves secuelas y complicaciones médicas severas principalmente para la madre**. Estas fallas clínicas y administrativas no solo pusieron en riesgo su vida y salud física, sino que **afectaron profundamente su salud mental y bienestar emocional** debido a la desatención e incertidumbre.
+
+De por sí, la estancia en un hospital es un momento de incertidumbre y dolor para cualquier familia; añadir errores de seguimiento o vacíos en el registro clínico agrava esa carga de forma intolerable. Es una vivencia traumática y difícil que **no quisiéramos que se repitiera jamás para ninguna madre ni para ningún paciente**.
 
 **Aozora Care-Flow** fue concebido bajo una promesa solemne: transformar la tecnología de gestión hospitalaria para evitar que otras familias tengan que atravesar incidentes previsibles debido a la falta de coordinación. Es un ecosistema diseñado con profundo respeto y rigor técnico, con el único fin de salvaguardar la seguridad operativa del paciente, facilitando una estancia hospitalaria transparente, segura y libre de errores humanos prevenibles.
 

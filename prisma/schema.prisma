@@ -73,6 +73,14 @@ model Visit {
   medicines       String?   // Prescription / medicines written by doctor
   followUp        String?   // Follow-up notes/recommendations
   
+  // Patient Profile fields
+  age                 Int?
+  gender              String?   // "Masculino" | "Femenino" | "Otro"
+  chronicConditions   String?   // diabetes, hipertensión, hipoglucemia, etc.
+  allergies           String?   // Alergias
+  currentMedications  String?   // Medicamentos actuales
+  lastMenstrualPeriod DateTime? // Última fecha de menstruación (en caso de ser mujer)
+  
   // Appointment data fields
   isAppointment   Boolean   @default(false)
   appointmentDate DateTime?
@@ -85,6 +93,8 @@ model Visit {
   doctor          Doctor?   @relation(fields: [doctorId], references: [id])
   nurseLogs       NurseLog[]
   pharmacyRequests PharmacyRequest[]
+  clinicalAnalyses ClinicalAnalysis[]
+  medicationReminders MedicationReminder[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 }
@@ -133,4 +143,40 @@ model Medication {
   unit        String   @default("Cajas")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ClinicalAnalysis {
+  id                 String    @id @default(uuid())
+  visitId            String
+  visit              Visit     @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  name               String    // Ej: "Biometría Hemática Completa", "Radiografía de Tórax"
+  requestedBy        String    // Nombre de quien solicita (médico o enfermero)
+  requestedRole      String    // Rol ("medico" o "enfermero")
+  requestedAt        DateTime  @default(now())
+  scheduledAt        DateTime  // Fecha y hora programada
+  status             String    @default("solicitado") // "solicitado" | "realizado" | "no realizado" | "reprogramado"
+  results            String?   // Resultados del estudio
+  notes              String?   // Notas o indicaciones previas
+  incidences         String?   // Incidencias ocurridas durante el estudio
+  notDoneReason      String?   // Motivo de no realización si es status "no realizado"
+  rescheduled        Boolean   @default(false)
+  rescheduledTo      DateTime? // Nueva fecha de programación
+  rescheduledReason  String?   // Motivo de reprogramación
+  pdfUrl             String?   // Enlace externo al PDF del estudio completo
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model MedicationReminder {
+  id                 String    @id @default(uuid())
+  visitId            String
+  visit              Visit     @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  medicationName     String    // Nombre del medicamento
+  intervalHours      Int       // Intervalo en horas (ej: 4, 8)
+  nextDoseAt         DateTime  // Cuándo es la siguiente toma
+  lastAdministeredAt DateTime  @default(now()) // Cuándo fue la última toma administrada
+  status             String    @default("activo") // "activo" | "completado" | "cancelado"
+  nurseName          String    // Nombre del enfermero que configuró el ciclo
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }

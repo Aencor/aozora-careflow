@@ -31,7 +31,9 @@ import {
   Download,
   Award,
   ArrowLeft,
-  HeartPulse
+  HeartPulse,
+  Pill,
+  FileText
 } from 'lucide-react';
 
 export default function ShowcasePage() {
@@ -41,9 +43,34 @@ export default function ShowcasePage() {
   // Custom inputs for Simulator
   const [simName, setSimName] = useState('Sofía Montenegro');
   const [simEmail, setSimEmail] = useState('sofia.montenegro@email.com');
-  const [simReason, setSimReason] = useState('Consulta por arritmia y fatiga leve');
+  const [simReason, setSimReason] = useState('Consulta obstétrica por fatiga, taquicardia y revisión de antecedente de preeclampsia');
   const [simDestination, setSimDestination] = useState('Consultorio 102 (Cardiología)');
   const [simDoctor, setSimDoctor] = useState('Dra. Elena Rostova');
+
+  // Antecedentes Clínicos del Paciente
+  const [simAge, setSimAge] = useState(32);
+  const [simGender, setSimGender] = useState('Femenino');
+  const [simAllergies, setSimAllergies] = useState('Penicilina, Sulfamidas');
+  const [simChronicConditions, setSimChronicConditions] = useState('Diabetes gestacional, hipertensión gestacional crónica');
+  const [simCurrentMedications, setSimCurrentMedications] = useState('Metildopa 250mg cada 12 horas, Aspirina protect 150mg/día');
+  const [simLmp, setSimLmp] = useState('2026-05-10');
+  const [showAntecedents, setShowAntecedents] = useState(true);
+
+  // Análisis Clínicos del Paciente
+  const [simAnalysisName, setSimAnalysisName] = useState('Química Sanguínea de 6 Elementos');
+  const [simAnalysisScheduled, setSimAnalysisScheduled] = useState('2026-05-31T08:30');
+  const [simAnalysisStatus, setSimAnalysisStatus] = useState('solicitado'); // solicitado | realizado | no realizado | reprogramado
+  const [simAnalysisResults, setSimAnalysisResults] = useState('Glucosa: 84 mg/dL, Urea: 24 mg/dL, Creatinina: 0.72 mg/dL. Perfil hepático y renal estable.');
+  const [simAnalysisIncidences, setSimAnalysisIncidences] = useState('Paciente refirió dolor de cabeza leve transitorio. Muestra tomada sin contratiempos.');
+  const [simAnalysisPdfUrl, setSimAnalysisPdfUrl] = useState('https://aozora.careflow.com/docs/quimica-sofia-montenegro.pdf');
+  const [simAnalysisRequested, setSimAnalysisRequested] = useState(true);
+
+  // Recordatorios de Medicación
+  const [simReminderName, setSimReminderName] = useState('Metoprolol 50mg');
+  const [simReminderActive, setSimReminderActive] = useState(true);
+  const [simReminderInterval, setSimReminderInterval] = useState(8);
+  const [simReminderAlertTriggered, setSimReminderAlertTriggered] = useState(true);
+  const [simReminderDosesTaken, setSimReminderDosesTaken] = useState(0);
   
   // Doctor step state
   const [simAilments, setSimAilments] = useState('Arritmia sinusal leve, fatiga asociada a estrés laboral.');
@@ -96,11 +123,23 @@ export default function ShowcasePage() {
     regenerateQR();
     setSimName('Sofía Montenegro');
     setSimEmail('sofia.montenegro@email.com');
-    setSimReason('Consulta por arritmia y fatiga leve');
+    setSimReason('Consulta obstétrica por fatiga, taquicardia y revisión de antecedente de preeclampsia');
     setSimAilments('Arritmia sinusal leve, fatiga asociada a estrés laboral.');
     setSimMedicines('Metoprolol 50mg - 1 tableta al día por la mañana. Descanso de 2 días.');
     setSimFollowUp('Revisión en 1 mes con electrocardiograma de control.');
     setNurseLogList([]);
+    setSimAge(32);
+    setSimGender('Femenino');
+    setSimAllergies('Penicilina, Sulfamidas');
+    setSimChronicConditions('Diabetes gestacional, hipertensión gestacional crónica');
+    setSimCurrentMedications('Metildopa 250mg cada 12 horas, Aspirina protect 150mg/día');
+    setSimLmp('2026-05-10');
+    setSimAnalysisName('Química Sanguínea de 6 Elementos');
+    setSimAnalysisStatus('solicitado');
+    setSimAnalysisRequested(true);
+    setSimReminderActive(true);
+    setSimReminderAlertTriggered(true);
+    setSimReminderDosesTaken(0);
   };
 
   return (
@@ -300,6 +339,85 @@ export default function ShowcasePage() {
                           className="w-full h-9 px-3 rounded-lg glass-input text-xs" 
                         />
                       </div>
+                      
+                      <div className="pt-2.5 border-t border-white/5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] uppercase font-bold text-sky-400 tracking-wider">Ficha de Antecedentes Clínicos</label>
+                          <button
+                            type="button"
+                            onClick={() => setShowAntecedents(!showAntecedents)}
+                            className="text-[9px] text-slate-450 hover:text-slate-200 transition-colors uppercase font-bold cursor-pointer"
+                          >
+                            {showAntecedents ? 'Ocultar ✕' : 'Mostrar +'}
+                          </button>
+                        </div>
+                        {showAntecedents && (
+                          <div className="space-y-2.5 animate-fadeIn">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-1">Edad</label>
+                                <input 
+                                  type="number" 
+                                  value={simAge} 
+                                  onChange={(e) => setSimAge(parseInt(e.target.value) || '')}
+                                  className="w-full h-8 px-3 rounded-lg glass-input text-xs" 
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-1">Sexo</label>
+                                <select 
+                                  value={simGender}
+                                  onChange={(e) => setSimGender(e.target.value)}
+                                  className="w-full h-8 px-2 rounded-lg glass-input text-[11px]"
+                                >
+                                  <option value="Femenino">Femenino</option>
+                                  <option value="Masculino">Masculino</option>
+                                  <option value="Otro">Otro</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-1">Alergias</label>
+                              <input 
+                                type="text" 
+                                value={simAllergies} 
+                                onChange={(e) => setSimAllergies(e.target.value)}
+                                className="w-full h-8 px-3 rounded-lg glass-input text-xs" 
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] uppercase font-bold text-slate-400 tracking-wider mb-1">Condiciones Especiales / Crónicas</label>
+                              <input 
+                                type="text" 
+                                value={simChronicConditions} 
+                                onChange={(e) => setSimChronicConditions(e.target.value)}
+                                className="w-full h-8 px-3 rounded-lg glass-input text-xs" 
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[9px] uppercase font-bold text-slate-450 tracking-wider mb-1">Medicamentos Activos</label>
+                                <input 
+                                  type="text" 
+                                  value={simCurrentMedications} 
+                                  onChange={(e) => setSimCurrentMedications(e.target.value)}
+                                  className="w-full h-8 px-3 rounded-lg glass-input text-xs" 
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[9px] uppercase font-bold text-slate-450 tracking-wider mb-1">Última Menstruación (FUM)</label>
+                                <input 
+                                  type="date" 
+                                  disabled={simGender !== 'Femenino'}
+                                  value={simLmp} 
+                                  onChange={(e) => setSimLmp(e.target.value)}
+                                  className="w-full h-8 px-2 rounded-lg glass-input text-xs disabled:opacity-45" 
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -359,6 +477,41 @@ export default function ShowcasePage() {
                           onChange={(e) => setSimFollowUp(e.target.value)}
                           className="w-full h-8 px-3 rounded-lg glass-input text-xs" 
                         />
+                      </div>
+
+                      <div className="pt-2.5 border-t border-white/5 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] uppercase font-bold text-sky-400 tracking-wider">🧪 Solicitar Análisis Clínico</label>
+                          <span className="text-[8px] font-bold text-slate-500 bg-slate-900 border border-white/5 px-1.5 py-0.5 rounded">NUEVA FUNCIÓN</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 animate-fadeIn">
+                          <div>
+                            <label className="block text-[8px] uppercase font-bold text-slate-455 tracking-wider mb-0.5">Estudio a Solicitar</label>
+                            <select
+                              value={simAnalysisName}
+                              onChange={(e) => setSimAnalysisName(e.target.value)}
+                              className="w-full h-8 px-2 rounded-lg glass-input text-[11px]"
+                            >
+                              <option value="Química Sanguínea de 6 Elementos">Química Sanguínea de 6 Elementos</option>
+                              <option value="Electrocardiograma de 12 derivaciones">Electrocardiograma 12 derivaciones</option>
+                              <option value="Ultrasonido Obstétrico Completo">Ultrasonido Obstétrico Completo</option>
+                              <option value="Biometría Hemática Completa">Biometría Hemática Completa</option>
+                            </select>
+                          </div>
+                          <div className="flex items-end">
+                            <button
+                              type="button"
+                              onClick={() => setSimAnalysisRequested(!simAnalysisRequested)}
+                              className={`w-full h-8 rounded-lg font-bold text-[10px] uppercase transition-all duration-300 border flex items-center justify-center cursor-pointer ${
+                                simAnalysisRequested 
+                                  ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' 
+                                  : 'bg-slate-900 text-slate-400 border-white/5 hover:border-slate-500 hover:text-white'
+                              }`}
+                            >
+                              {simAnalysisRequested ? '✓ Solicitado' : '+ Solicitar Estudio'}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -423,6 +576,110 @@ export default function ShowcasePage() {
                         <PlusIcon className="w-3.5 h-3.5" />
                         <span>Añadir Registro a Bitácora</span>
                       </button>
+                      {/* Recordatorios de Medicación Section */}
+                      <div className="pt-2.5 border-t border-white/5 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[10px] uppercase font-bold text-sky-400 tracking-wider">🔔 Sistema de Alertas de Medicamento</label>
+                          <span className="text-[8px] font-bold text-slate-500 bg-slate-900 border border-white/5 px-1.5 py-0.5 rounded">NUEVA FUNCIÓN</span>
+                        </div>
+                        <div className="p-2.5 bg-slate-900/60 rounded-xl border border-white/5 space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-350">Recordatorio periódico:</span>
+                            <span className="text-emerald-400 font-bold">Activo (Cada {simReminderInterval}h)</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-350">Dosis tomadas:</span>
+                            <span className="font-bold text-white">{simReminderDosesTaken} dosis</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-slate-350">Simular Alerta de Retraso:</span>
+                            <input 
+                              type="checkbox"
+                              checked={simReminderAlertTriggered}
+                              onChange={(e) => setSimReminderAlertTriggered(e.target.checked)}
+                              className="rounded border-white/10 bg-slate-950 text-indigo-500 w-3.5 h-3.5 cursor-pointer"
+                            />
+                          </div>
+                          {simReminderAlertTriggered && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSimReminderDosesTaken(simReminderDosesTaken + 1);
+                                setSimReminderAlertTriggered(false);
+                                // Add to nurse log list automatically
+                                const newLog = {
+                                  nurseName: simNurseName,
+                                  treatments: `Administración de dosis regular de ${simReminderName} (Toma a tiempo)`,
+                                  medicines: `${simReminderName} - Dosis registrada`,
+                                  indications: `Toma regular registrada. Paciente refiere sentirse bien.`,
+                                  loggedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                };
+                                setNurseLogList([newLog, ...nurseLogList]);
+                              }}
+                              className="w-full h-7 rounded-lg bg-rose-500 text-slate-950 text-[10px] font-bold uppercase hover:bg-rose-400 transition-all cursor-pointer flex items-center justify-center gap-1 shadow-[0_0_12px_rgba(244,63,94,0.3)] animate-pulse"
+                            >
+                              <span>🔔 Registrar Toma en 1-Clic</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Cargar Resultados Section */}
+                      {simAnalysisRequested && (
+                        <div className="pt-2.5 border-t border-white/5 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] uppercase font-bold text-sky-400 tracking-wider">🧪 Registrar Resultados del Estudio</label>
+                            <span className="text-[8px] font-bold text-slate-500 bg-slate-900 border border-white/5 px-1.5 py-0.5 rounded">NUEVA FUNCIÓN</span>
+                          </div>
+                          <div className="p-2.5 bg-slate-900/60 rounded-xl border border-white/5 space-y-2.5 text-xs">
+                            <div>
+                              <label className="block text-[8px] uppercase font-bold text-slate-455 tracking-wider mb-0.5">Estado del Análisis</label>
+                              <select
+                                value={simAnalysisStatus}
+                                onChange={(e) => setSimAnalysisStatus(e.target.value)}
+                                className="w-full h-8 px-2 rounded-lg glass-input text-[11px] cursor-pointer"
+                              >
+                                <option value="solicitado">Solicitado (Pendiente)</option>
+                                <option value="realizado">Estudio Realizado (Cargar Resultados)</option>
+                                <option value="no realizado">No Realizado (Especificar Motivo)</option>
+                                <option value="reprogramado">Reprogramar Estudio</option>
+                              </select>
+                            </div>
+
+                            {simAnalysisStatus === 'realizado' && (
+                              <div className="space-y-2.5 animate-fadeIn">
+                                <div>
+                                  <label className="block text-[8px] uppercase font-bold text-slate-455 tracking-wider mb-0.5">Informe de Resultados</label>
+                                  <textarea
+                                    rows="2"
+                                    value={simAnalysisResults}
+                                    onChange={(e) => setSimAnalysisResults(e.target.value)}
+                                    className="w-full p-2 rounded-lg glass-input text-xs resize-none"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[8px] uppercase font-bold text-slate-455 tracking-wider mb-0.5">Incidencias o Notas</label>
+                                  <input
+                                    type="text"
+                                    value={simAnalysisIncidences}
+                                    onChange={(e) => setSimAnalysisIncidences(e.target.value)}
+                                    className="w-full h-8 px-3 rounded-lg glass-input text-xs"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[8px] uppercase font-bold text-slate-455 tracking-wider mb-0.5">Enlace Externo PDF Resultados</label>
+                                  <input
+                                    type="url"
+                                    value={simAnalysisPdfUrl}
+                                    onChange={(e) => setSimAnalysisPdfUrl(e.target.value)}
+                                    className="w-full h-8 px-3 rounded-lg glass-input text-[11px] text-sky-400"
+                                  />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -549,6 +806,45 @@ export default function ShowcasePage() {
                         <p className="text-[9px] text-slate-400 uppercase font-semibold">Motivo</p>
                         <p className="text-slate-300 italic text-[11px] truncate">"{simReason}"</p>
                       </div>
+
+                      {showAntecedents && (
+                        <div className="pt-2.5 mt-2 border-t border-white/5 space-y-1.5 text-[9px] text-left animate-fadeIn">
+                          <div className="grid grid-cols-3 gap-1 text-slate-400">
+                            <div>
+                              <span className="block text-[7px] uppercase font-bold text-slate-500">Edad</span>
+                              <strong className="text-white font-medium">{simAge} años</strong>
+                            </div>
+                            <div>
+                              <span className="block text-[7px] uppercase font-bold text-slate-500">Sexo</span>
+                              <strong className="text-white font-medium">{simGender}</strong>
+                            </div>
+                            {simGender === 'Femenino' && simLmp && (
+                              <div>
+                                <span className="block text-[7px] uppercase font-bold text-slate-500">FUM</span>
+                                <strong className="text-sky-300 font-medium">{new Date(simLmp + 'T12:00:00').toLocaleDateString()}</strong>
+                              </div>
+                            )}
+                          </div>
+                          {simAllergies && (
+                            <div>
+                              <span className="block text-[7px] uppercase font-bold text-rose-400">Alergias</span>
+                              <strong className="text-rose-300 font-semibold">{simAllergies}</strong>
+                            </div>
+                          )}
+                          {simChronicConditions && (
+                            <div>
+                              <span className="block text-[7px] uppercase font-bold text-amber-400">Condiciones Crónicas / Especiales</span>
+                              <strong className="text-amber-300 font-semibold">{simChronicConditions}</strong>
+                            </div>
+                          )}
+                          {simCurrentMedications && (
+                            <div>
+                              <span className="block text-[7px] uppercase font-bold text-slate-500">Medicación habitual</span>
+                              <strong className="text-slate-300 font-medium truncate block">{simCurrentMedications}</strong>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* QR Code Container Mock */}
@@ -662,6 +958,18 @@ export default function ShowcasePage() {
                         </div>
                       </div>
 
+                      {/* Patient antecedents visual badge row in Doctor Portal */}
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        <span className="text-[8px] bg-slate-900 border border-white/5 px-2 py-0.5 rounded text-slate-400 font-semibold">{simAge} años</span>
+                        <span className="text-[8px] bg-slate-900 border border-white/5 px-2 py-0.5 rounded text-slate-400 font-semibold">{simGender}</span>
+                        {simAllergies && (
+                          <span className="text-[8px] bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded text-rose-400 font-bold">⚠️ Alergias: {simAllergies}</span>
+                        )}
+                        {simChronicConditions && (
+                          <span className="text-[8px] bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded text-amber-400 font-bold">⚠️ Crónico: {simChronicConditions}</span>
+                        )}
+                      </div>
+
                       {/* Doctor Clinical Forms Mock */}
                       <div className="space-y-2 text-xs">
                         <div className="p-3 bg-slate-950/60 rounded-xl border border-white/5 space-y-2">
@@ -679,6 +987,18 @@ export default function ShowcasePage() {
                             <p className="text-slate-400 text-[10px] leading-snug">{simFollowUp}</p>
                           </div>
                         </div>
+
+                        {simAnalysisRequested && (
+                          <div className="p-2.5 bg-indigo-950/20 border border-indigo-500/15 rounded-xl text-[10px] space-y-1 animate-fadeIn text-left">
+                            <span className="font-bold text-indigo-400 uppercase text-[8px] tracking-wider block">🧪 Estudio Clínico Solicitado</span>
+                            <div className="flex justify-between items-center text-[10px] text-slate-200">
+                              <span>{simAnalysisName}</span>
+                              <span className="text-[7.5px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-yellow-500/10 border border-yellow-500/20 text-yellow-405">
+                                solicitado
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="h-9 rounded-lg bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1 border border-indigo-500/30 cursor-pointer hover:bg-indigo-400 transition-colors">
@@ -718,6 +1038,59 @@ export default function ShowcasePage() {
                           <span className="text-emerald-400 font-medium line-clamp-1">{simMedicines}</span>
                         </div>
                       </div>
+
+                      {/* Medication Alarm floating card */}
+                      {simReminderAlertTriggered && (
+                        <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-3 flex items-start gap-2.5 text-xs text-left animate-pulse">
+                          <div className="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 shrink-0 mt-0.5">
+                            <Clock className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-rose-400 uppercase text-[9px] tracking-wider">🔔 Alerta de Medicación Pendiente</span>
+                              <span className="text-[7.5px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/30 text-rose-400">retraso: 15m</span>
+                            </div>
+                            <p className="text-white text-[11px] font-medium leading-snug">Se requiere administración de <strong className="text-rose-300">{simReminderName}</strong> (Dosis de la mañana).</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Clinical Analysis study status card */}
+                      {simAnalysisRequested && (
+                        <div className="p-3 bg-slate-950/60 border border-white/5 rounded-xl text-left space-y-1.5 text-xs">
+                          <span className="font-bold text-indigo-400 uppercase text-[8px] tracking-wider block">🧪 Estado del Estudio Clínico</span>
+                          <div className="flex justify-between items-center">
+                            <strong className="text-white text-[11px]">{simAnalysisName}</strong>
+                            <span className={`text-[8.5px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${
+                              simAnalysisStatus === 'realizado' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
+                              simAnalysisStatus === 'reprogramado' ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' :
+                              'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'
+                            }`}>
+                              {simAnalysisStatus}
+                            </span>
+                          </div>
+                          
+                          {simAnalysisStatus === 'realizado' && (
+                            <div className="mt-1.5 p-2 bg-emerald-950/20 border border-emerald-500/5 rounded text-[10px] space-y-1 animate-fadeIn">
+                              <p className="text-slate-200 font-medium">"{simAnalysisResults}"</p>
+                              {simAnalysisIncidences && <p className="text-slate-450 text-[9px] mt-0.5"><strong>Incidencias:</strong> {simAnalysisIncidences}</p>}
+                              {simAnalysisPdfUrl && (
+                                <div className="mt-1.5 pt-1.5 border-t border-emerald-500/10 flex items-center">
+                                  <a 
+                                    href={simAnalysisPdfUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer text-[9px]"
+                                  >
+                                    <FileText className="w-2.5 h-2.5" />
+                                    Ver PDF Completo
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Nurse Log Queue List */}
                       <div>
@@ -845,6 +1218,7 @@ export default function ShowcasePage() {
               { id: 'guardia', label: '🛡️ Seguridad / Guardia', color: 'border-emerald-500 text-emerald-400' },
               { id: 'medico', label: '🩺 Médico Tratante', color: 'border-indigo-500 text-indigo-400' },
               { id: 'enfermera', label: '💊 Enfermería', color: 'border-purple-500 text-purple-400' },
+              { id: 'farmaco', label: '🧪 Farmacéutico', color: 'border-sky-500 text-sky-400' },
               { id: 'admin', label: '📊 Director / Administrador', color: 'border-teal-500 text-teal-400' }
             ].map((tab) => (
               <button
@@ -1035,6 +1409,81 @@ export default function ShowcasePage() {
               </div>
             )}
 
+            {/* PHARMACY TAB */}
+            {activeRoleTab === 'farmaco' && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center animate-fade-in">
+                <div className="lg:col-span-5 space-y-6">
+                  <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(14,165,233,0.15)]">
+                    <Pill className="w-6 h-6 text-sky-400" />
+                  </div>
+                  <h3 className="text-2xl font-extrabold text-white">Consola de Despacho Farmacéutico</h3>
+                  <p className="text-slate-400 text-xs leading-relaxed">
+                    Portal exclusivo para el personal de farmacia. Centraliza todas las solicitudes de medicamentos generadas por enfermeras y las vincula al inventario del hospital en tiempo real.
+                  </p>
+                  
+                  <ul className="space-y-3 text-xs text-slate-300">
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                      <span><strong>Cola de Solicitudes en Tiempo Real</strong>: Visualiza todas las peticiones pendientes de medicamentos de cada enfermera, organizadas por urgencia y habitación.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                      <span><strong>Despacho con Un Clic</strong>: Confirma la entrega y el sistema actualiza el estatus a "Entregado" con sello de hora y nombre del farmacéutico responsable.</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <CheckCircle className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+                      <span><strong>Inventario con Control de Stock</strong>: Catálogo de más de 30 medicamentos con ajuste manual de existencias (+/−) y alerta visual de stock agotado.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="lg:col-span-7 p-4 bg-slate-950/80 rounded-2xl border border-white/5 space-y-4">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-[10px] text-slate-500 font-mono">CONSOLA FARMACIA // SOLICITUDES ACTIVAS</span>
+                    <span className="text-[9px] text-sky-400 font-bold bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">3 PENDIENTES</span>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {[
+                      { patient: 'Mariana Rosas', room: 'Hab. 302-A', med: 'Paracetamol 1g IV + Suero NaCl 0.9%', nurse: 'Enf. Rivera', status: 'pendiente' },
+                      { patient: 'Mario Castillo', room: 'Hab. 215', med: 'Metoprolol 50mg, Aspirina 100mg', nurse: 'Enf. Gómez', status: 'pendiente' },
+                      { patient: 'Elena Vásquez', room: 'UCI-3', med: 'Morfina 5mg IM + Ondansetrón 4mg IV', nurse: 'Enf. Torres', status: 'entregado' },
+                    ].map((req, idx) => (
+                      <div key={idx} className={`p-3 rounded-xl border text-xs flex justify-between items-start gap-3 ${
+                        req.status === 'pendiente'
+                          ? 'bg-amber-950/20 border-amber-500/20'
+                          : 'bg-emerald-950/20 border-emerald-500/20'
+                      }`}>
+                        <div className="space-y-0.5 min-w-0">
+                          <p className="font-bold text-white truncate">{req.patient} <span className="text-slate-500 font-normal">• {req.room}</span></p>
+                          <p className="text-[10px] text-slate-400 font-mono truncate">{req.med}</p>
+                          <p className="text-[9px] text-slate-500">Solicitado por: {req.nurse}</p>
+                        </div>
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0 ${
+                          req.status === 'pendiente'
+                            ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+                            : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
+                        }`}>{req.status}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="p-3 bg-sky-950/20 border border-sky-500/10 rounded-xl">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">ÍÍNDICE DE INVENTARIO (Muestra)</p>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      {[{name:'Paracetamol', stock:48, unit:'Cajas'},{name:'Morfina 5mg', stock:12, unit:'Ampollas'},{name:'Metoprolol', stock:0, unit:'Tabletas'}].map((m, i) => (
+                        <div key={i} className="p-2 bg-slate-950/60 rounded-lg border border-white/5">
+                          <p className="text-[9px] text-slate-400 truncate">{m.name}</p>
+                          <p className={`text-sm font-black ${m.stock > 0 ? 'text-sky-400' : 'text-rose-400'}`}>{m.stock}</p>
+                          <p className="text-[8px] text-slate-600">{m.unit}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ADMIN TAB */}
             {activeRoleTab === 'admin' && (
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center animate-fade-in">
@@ -1126,6 +1575,7 @@ export default function ShowcasePage() {
                   <p className="text-slate-300 flex justify-between"><span className="text-slate-500">1. Administrador:</span> <span>User: <strong className="text-emerald-400">admin</strong> / Pass: <strong className="text-emerald-400">adminpassword</strong></span></p>
                   <p className="text-slate-300 flex justify-between"><span className="text-slate-500">2. Médico Pediatra:</span> <span>User: <strong className="text-indigo-400">medico1</strong> / Pass: <strong className="text-indigo-400">doctorpassword</strong></span></p>
                   <p className="text-slate-300 flex justify-between"><span className="text-slate-500">3. Guardia de Acceso:</span> <span>User: <strong className="text-purple-400">guardia1</strong> / Pass: <strong className="text-purple-400">staffpassword</strong></span></p>
+                  <p className="text-slate-300 flex justify-between"><span className="text-slate-500">4. Farmacéutico:</span> <span>User: <strong className="text-sky-400">farmaco1</strong> / Pass: <strong className="text-sky-400">staffpassword</strong></span></p>
                 </div>
               </div>
 

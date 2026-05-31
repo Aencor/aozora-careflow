@@ -27,7 +27,8 @@ import {
   Check,
   Bed,
   Pill,
-  RefreshCw
+  RefreshCw,
+  Bell
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -196,6 +197,50 @@ export default function DashboardPage() {
   const [editStaffName, setEditStaffName] = useState('');
   const [editStaffRoleId, setEditStaffRoleId] = useState('');
   const [editStaffPassword, setEditStaffPassword] = useState('');
+
+  // Módulo de Análisis Clínicos & Recordatorios de Medicamento
+  const [clinicalAnalyses, setClinicalAnalyses] = useState([]);
+  const [medicationReminders, setMedicationReminders] = useState([]);
+  
+  // States para programar recordatorios en bitácora
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderMedName, setReminderMedName] = useState('');
+  const [reminderInterval, setReminderInterval] = useState(4);
+
+  // States para solicitar análisis clínico
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [selectedVisitForAnalysis, setSelectedVisitForAnalysis] = useState(null);
+  const [newAnalysisName, setNewAnalysisName] = useState('');
+  const [newAnalysisScheduledAt, setNewAnalysisScheduledAt] = useState('');
+  const [newAnalysisNotes, setNewAnalysisNotes] = useState('');
+
+  // States para actualizar análisis clínico (Resultados, reprogramación o no realizado)
+  const [showReviewAnalysisModal, setShowReviewAnalysisModal] = useState(false);
+  const [selectedAnalysisForReview, setSelectedAnalysisForReview] = useState(null);
+  const [reviewStatus, setReviewStatus] = useState('realizado'); // realizado | no realizado | reprogramado
+  const [reviewResults, setReviewResults] = useState('');
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [reviewIncidences, setReviewIncidences] = useState('');
+  const [reviewNotDoneReason, setReviewNotDoneReason] = useState('');
+  const [reviewRescheduledTo, setReviewRescheduledTo] = useState('');
+  const [reviewRescheduledReason, setReviewRescheduledReason] = useState('');
+  const [reviewPdfUrl, setReviewPdfUrl] = useState('');
+
+  // States para editar información completa del paciente en "Mis Pacientes"
+  const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+  const [editingPatient, setEditingPatient] = useState(null);
+  const [editPatientName, setEditPatientName] = useState('');
+  const [editPatientEmail, setEditPatientEmail] = useState('');
+  const [editPatientPhone, setEditPatientPhone] = useState('');
+  const [editPatientCompanion, setEditPatientCompanion] = useState('');
+  const [editPatientReason, setEditPatientReason] = useState('');
+  const [editPatientDestination, setEditPatientDestination] = useState('');
+  const [editPatientAge, setEditPatientAge] = useState('');
+  const [editPatientGender, setEditPatientGender] = useState('');
+  const [editPatientChronicConditions, setEditPatientChronicConditions] = useState('');
+  const [editPatientAllergies, setEditPatientAllergies] = useState('');
+  const [editPatientCurrentMedications, setEditPatientCurrentMedications] = useState('');
+  const [editPatientLastMenstrualPeriod, setEditPatientLastMenstrualPeriod] = useState('');
 
   // Fetch Nurse Logs and Pharmacy Requests for a Visit
   const fetchNurseLogs = async (visitId) => {
@@ -374,7 +419,7 @@ export default function DashboardPage() {
     setNewTreatments('');
     setNewMedicines('');
     setNewIndications('');
-    setNewLoggedAt(new Date().toLocaleString('sv-SE', { timeZoneName: 'short' }).slice(0, 16).replace(' ', 'T')); // YYYY-MM-DDTHH:MM
+    setNewLoggedAt(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)); // YYYY-MM-DDTHH:MM
     setShowAddNurseLogModal(true);
   };
 
@@ -422,7 +467,28 @@ export default function DashboardPage() {
           }
         }
 
+        // Auto-trigger Medication Reminder if requested
+        if (reminderEnabled && reminderMedName) {
+          try {
+            await fetch('/api/medication-reminders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                visitId: selectedVisitForNurse.id,
+                medicationName: reminderMedName,
+                intervalHours: reminderInterval
+              })
+            });
+            console.log('Medication reminder successfully set.');
+          } catch (reminderErr) {
+            console.error('Error auto-creating medication reminder:', reminderErr);
+          }
+        }
+
         setShowAddNurseLogModal(false);
+        setReminderEnabled(false);
+        setReminderMedName('');
+        setReminderInterval(4);
         fetchDashboardData(); // Refresh patient lists
       } else {
         triggerNotification('error', data.error || 'Error al registrar bitácora.');
@@ -431,6 +497,109 @@ export default function DashboardPage() {
       triggerNotification('error', 'Error de red.');
     } finally {
       setNurseSubmitting(false);
+    }
+  };
+
+  const handleCreateAnalysis = async (e) => {
+    e.preventDefault();
+    if (!selectedVisitForAnalysis || !newAnalysisName || !newAnalysisScheduledAt) {
+      triggerNotification('error', 'Por favor completa todos los campos requeridos.');
+      return;
+    }
+    try {
+      const res = await fetch('/api/clinical-analyses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          visitId: selectedVisitForAnalysis.id,
+          name: newAnalysisName,
+          scheduledAt: new Date(newAnalysisScheduledAt).toISOString(),
+          notes: newAnalysisNotes
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        triggerNotification('success', 'Análisis clínico solicitado con éxito.');
+        setShowAnalysisModal(false);
+        setNewAnalysisName('');
+        setNewAnalysisScheduledAt('');
+        setNewAnalysisNotes('');
+        fetchDashboardData();
+      } else {
+        triggerNotification('error', data.error || 'Error al solicitar análisis.');
+      }
+    } catch (err) {
+      console.error(err);
+      triggerNotification('error', 'Error al procesar la solicitud.');
+    }
+  };
+
+  const handleUpdateAnalysis = async (e) => {
+    e.preventDefault();
+    if (!selectedAnalysisForReview) return;
+    try {
+      const res = await fetch('/api/clinical-analyses', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedAnalysisForReview.id,
+          status: reviewStatus,
+          results: reviewResults,
+          notes: reviewNotes,
+          incidences: reviewIncidences,
+          notDoneReason: reviewNotDoneReason,
+          rescheduledTo: reviewRescheduledTo ? new Date(reviewRescheduledTo).toISOString() : null,
+          rescheduledReason: reviewRescheduledReason,
+          pdfUrl: reviewPdfUrl
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        triggerNotification('success', 'Análisis clínico actualizado con éxito.');
+        setShowReviewAnalysisModal(false);
+        setReviewResults('');
+        setReviewNotes('');
+        setReviewIncidences('');
+        setReviewNotDoneReason('');
+        setReviewRescheduledTo('');
+        setReviewRescheduledReason('');
+        setReviewPdfUrl('');
+        fetchDashboardData();
+      } else {
+        triggerNotification('error', data.error || 'Error al actualizar análisis.');
+      }
+    } catch (err) {
+      console.error(err);
+      triggerNotification('error', 'Error al actualizar el estudio.');
+    }
+  };
+
+  const handleUpdateReminder = async (reminderId, action) => {
+    try {
+      const res = await fetch('/api/medication-reminders', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: reminderId,
+          action
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (action === 'administer') {
+          triggerNotification('success', 'Toma de medicamento registrada. Siguiente programada.');
+        } else if (action === 'complete') {
+          triggerNotification('success', 'Ciclo de medicación marcado como completado.');
+        } else if (action === 'cancel') {
+          triggerNotification('success', 'Ciclo de medicación cancelado.');
+        }
+        fetchDashboardData();
+      } else {
+        triggerNotification('error', data.error || 'Error al procesar recordatorio.');
+      }
+    } catch (err) {
+      console.error(err);
+      triggerNotification('error', 'Error al actualizar recordatorio.');
     }
   };
 
@@ -478,6 +647,70 @@ export default function DashboardPage() {
       triggerNotification('error', 'Error de red al conectar con el servidor.');
     } finally {
       setHospSubmitting(false);
+    }
+  };
+
+  const handleEditPatientClick = (patient) => {
+    setEditingPatient(patient);
+    setEditPatientName(patient.patientName || '');
+    setEditPatientEmail(patient.email || '');
+    setEditPatientPhone(patient.phone || '');
+    setEditPatientCompanion(patient.visitorCompanion || '');
+    setEditPatientReason(patient.reason || '');
+    setEditPatientDestination(patient.destination || '');
+    setEditPatientAge(patient.age !== null && patient.age !== undefined ? String(patient.age) : '');
+    setEditPatientGender(patient.gender || '');
+    setEditPatientChronicConditions(patient.chronicConditions || '');
+    setEditPatientAllergies(patient.allergies || '');
+    setEditPatientCurrentMedications(patient.currentMedications || '');
+    setEditPatientLastMenstrualPeriod(patient.lastMenstrualPeriod ? patient.lastMenstrualPeriod.slice(0, 10) : '');
+    setShowEditPatientModal(true);
+  };
+
+  const handleSavePatientEdit = async (e) => {
+    e.preventDefault();
+    if (!editingPatient) return;
+    if (!editPatientName.trim() || !editPatientReason.trim() || !editPatientDestination.trim()) {
+      triggerNotification('error', 'Por favor ingresa nombre, motivo y destino/habitación.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/visits', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingPatient.id,
+          patientName: editPatientName,
+          email: editPatientEmail || null,
+          phone: editPatientPhone || null,
+          visitorCompanion: editPatientCompanion || null,
+          reason: editPatientReason,
+          destination: editPatientDestination,
+          age: editPatientAge ? parseInt(editPatientAge) : null,
+          gender: editPatientGender || null,
+          chronicConditions: editPatientChronicConditions || null,
+          allergies: editPatientAllergies || null,
+          currentMedications: editPatientCurrentMedications || null,
+          lastMenstrualPeriod: editPatientGender === 'Femenino' && editPatientLastMenstrualPeriod ? editPatientLastMenstrualPeriod : null
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        triggerNotification('success', 'Información del paciente actualizada correctamente.');
+        setShowEditPatientModal(false);
+        setEditingPatient(null);
+        fetchDashboardData();
+      } else {
+        triggerNotification('error', data.error || 'Error al actualizar la información.');
+      }
+    } catch (err) {
+      console.error(err);
+      triggerNotification('error', 'Error de red al conectar con el servidor.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -536,7 +769,8 @@ export default function DashboardPage() {
   // ==========================================
   // DOCTOR PORTAL CORE STATE & LOGIC (EMR)
   // ==========================================
-  const [docTab, setDocTab] = useState('patients'); // 'patients' | 'schedule' | 'myhistory' | 'profile'
+  const [docTab, setDocTab] = useState('patients'); // 'patients' | 'schedule' | 'myhistory' | 'profile' | 'clinical-agenda'
+  const [nurseTab, setNurseTab] = useState('patients'); // 'patients' | 'clinical-agenda'
   const [editDocName, setEditDocName] = useState('');
   const [editDocSpecialty, setEditDocSpecialty] = useState('');
   const [editDocWorkingHours, setEditDocWorkingHours] = useState('');
@@ -594,6 +828,12 @@ export default function DashboardPage() {
   const [clinicalAilments, setClinicalAilments] = useState('');
   const [clinicalMedicines, setClinicalMedicines] = useState('');
   const [clinicalFollowUp, setClinicalFollowUp] = useState('');
+  const [clinicalAge, setClinicalAge] = useState('');
+  const [clinicalGender, setClinicalGender] = useState('');
+  const [clinicalChronicConditions, setClinicalChronicConditions] = useState('');
+  const [clinicalAllergies, setClinicalAllergies] = useState('');
+  const [clinicalCurrentMedications, setClinicalCurrentMedications] = useState('');
+  const [clinicalLastMenstrualPeriod, setClinicalLastMenstrualPeriod] = useState('');
   const [selectedPatientHistory, setSelectedPatientHistory] = useState([]);
   const [historyLoadingDoc, setHistoryLoadingDoc] = useState(false);
 
@@ -616,6 +856,12 @@ export default function DashboardPage() {
     setClinicalAilments(visit.ailments || '');
     setClinicalMedicines(visit.medicines || '');
     setClinicalFollowUp(visit.followUp || '');
+    setClinicalAge(visit.age || '');
+    setClinicalGender(visit.gender || '');
+    setClinicalChronicConditions(visit.chronicConditions || '');
+    setClinicalAllergies(visit.allergies || '');
+    setClinicalCurrentMedications(visit.currentMedications || '');
+    setClinicalLastMenstrualPeriod(visit.lastMenstrualPeriod ? visit.lastMenstrualPeriod.slice(0, 10) : '');
 
     if (visit.email) {
       setHistoryLoadingDoc(true);
@@ -653,7 +899,13 @@ export default function DashboardPage() {
           visitId: selectedPatient.id,
           ailments: clinicalAilments,
           medicines: clinicalMedicines,
-          followUp: clinicalFollowUp
+          followUp: clinicalFollowUp,
+          age: clinicalAge ? parseInt(clinicalAge) : null,
+          gender: clinicalGender || null,
+          chronicConditions: clinicalChronicConditions || null,
+          allergies: clinicalAllergies || null,
+          currentMedications: clinicalCurrentMedications || null,
+          lastMenstrualPeriod: clinicalLastMenstrualPeriod || null
         })
       });
       const data = await res.json();
@@ -663,6 +915,12 @@ export default function DashboardPage() {
         setClinicalAilments('');
         setClinicalMedicines('');
         setClinicalFollowUp('');
+        setClinicalAge('');
+        setClinicalGender('');
+        setClinicalChronicConditions('');
+        setClinicalAllergies('');
+        setClinicalCurrentMedications('');
+        setClinicalLastMenstrualPeriod('');
         setSelectedPatientHistory([]);
         fetchDashboardData();
       } else {
@@ -793,16 +1051,130 @@ export default function DashboardPage() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-8">
+        <main className="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
           
-          {/* Welcome Dashboard Overview Card */}
-          <div className="glass-panel rounded-2xl p-6 relative overflow-hidden border border-indigo-500/10">
-            <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"></div>
-            <h3 className="text-xl font-extrabold text-white Outfit">¡Hola, {session.name}!</h3>
-            <p className="text-xs text-slate-400 mt-1 max-w-xl">
-              Bienvenido a tu consola de enfermería. Aquí puedes monitorear a los pacientes en hospitalización, consultar su expediente clínico y registrar chequeos, indicaciones y la administración de medicamentos en su expediente clínico compartido.
-            </p>
+          {/* Portal Sub-tabs navigation */}
+          <div className="flex items-center gap-2 border-b border-white/5 pb-px overflow-x-auto">
+            <button
+              onClick={() => setNurseTab('patients')}
+              className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+                nurseTab === 'patients'
+                  ? 'border-indigo-405 text-indigo-400 font-extrabold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Bed className="w-4 h-4" />
+              Pacientes Hospitalizados
+            </button>
+            <button
+              onClick={() => setNurseTab('clinical-agenda')}
+              className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+                nurseTab === 'clinical-agenda'
+                  ? 'border-indigo-405 text-indigo-400 font-extrabold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Calendar className="w-4 h-4 text-indigo-400" />
+              Agenda de Estudios Clínicos
+              {clinicalAnalyses.filter(a => ['solicitado', 'reprogramado'].includes(a.status)).length > 0 && (
+                <span className="bg-indigo-500/20 text-indigo-350 border border-indigo-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+                  {clinicalAnalyses.filter(a => ['solicitado', 'reprogramado'].includes(a.status)).length}
+                </span>
+              )}
+            </button>
           </div>
+
+          {nurseTab === 'patients' ? (
+            <div className="space-y-8 animate-fadeIn">
+              {/* Welcome Dashboard Overview Card */}
+              <div className="glass-panel rounded-2xl p-6 relative overflow-hidden border border-indigo-500/10">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"></div>
+                <h3 className="text-xl font-extrabold text-white Outfit">¡Hola, {session.name}!</h3>
+                <p className="text-xs text-slate-400 mt-1 max-w-xl">
+                  Bienvenido a tu consola de enfermería. Aquí puedes monitorear a los pacientes en hospitalización, consultar su expediente clínico y registrar chequeos, indicaciones y la administración de medicamentos en su expediente clínico compartido.
+                </p>
+              </div>
+
+          {/* Alertas de Medicamentos Vencidas */}
+          {(() => {
+            const overdueReminders = medicationReminders.filter(
+              r => r.status === 'activo' && new Date(r.nextDoseAt) <= currentTime
+            );
+            if (overdueReminders.length === 0) return null;
+            return (
+              <div className="glass-panel border-rose-500/20 bg-rose-950/10 p-5 rounded-2xl space-y-4 shadow-[0_0_20px_rgba(239,68,68,0.05)] animate-fadeIn">
+                <div className="flex items-center justify-between border-b border-rose-500/10 pb-3 text-left">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center border border-rose-500/20 text-rose-400 animate-pulse">
+                      <Bell className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-white text-sm uppercase tracking-wider Outfit">Tomas de Medicamentos Pendientes</h4>
+                      <p className="text-[10px] text-rose-450 font-medium">Hay {overdueReminders.length} dosis recurrentes que requieren atención inmediata.</p>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-bold bg-rose-500/10 text-rose-455 px-2 py-0.5 rounded uppercase tracking-wider border border-rose-500/20">
+                    Atención Requerida
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                  {overdueReminders.map(reminder => {
+                    const minutesAgo = Math.round((currentTime - new Date(reminder.nextDoseAt)) / 60000);
+                    const timeText = minutesAgo <= 0 ? 'Ahora' : `Hace ${minutesAgo} min`;
+                    return (
+                      <div key={reminder.id} className="p-4 rounded-xl bg-slate-950/40 border border-white/5 flex flex-col justify-between gap-3 hover:border-rose-500/30 transition-all duration-300">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+                              {reminder.visit?.destination || 'Habitación'}
+                            </span>
+                            <h5 className="font-bold text-white text-xs mt-1">{reminder.visit?.patientName}</h5>
+                            <p className="text-[11px] font-semibold text-slate-350 flex items-center gap-1.5 mt-1">
+                              <Pill className="w-3.5 h-3.5 text-indigo-400" />
+                              {reminder.medicationName}
+                            </p>
+                            <p className="text-[10px] text-slate-400">Pauta: Cada {reminder.intervalHours} horas</p>
+                          </div>
+                          
+                          <span className="text-[10px] font-bold text-rose-405 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {timeText}
+                          </span>
+                        </div>
+                        
+                        <div className="flex gap-2 pt-2 border-t border-white/5">
+                          <button
+                            onClick={() => handleUpdateReminder(reminder.id, 'administer')}
+                            className="flex-1 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-350 shadow-[0_0_10px_rgba(16,185,129,0.15)] flex items-center justify-center gap-1"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Registrar Toma
+                          </button>
+                          
+                          <button
+                            onClick={() => handleUpdateReminder(reminder.id, 'complete')}
+                            className="h-8 px-3 rounded-lg border border-slate-700 bg-slate-900/40 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300"
+                            title="Completar ciclo (Apagar recordatorios)"
+                          >
+                            Terminar
+                          </button>
+                          
+                          <button
+                            onClick={() => handleUpdateReminder(reminder.id, 'cancel')}
+                            className="h-8 px-2.5 rounded-lg border border-rose-500/15 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300"
+                            title="Cancelar ciclo por prescripción"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Hospitalized Patients List Section */}
           <div className="space-y-4">
@@ -907,6 +1279,12 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+          </div>
+          ) : (
+            <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-indigo-500/10 shadow-2xl bg-slate-950/40">
+              {renderClinicalAgenda()}
+            </div>
+          )}
 
         </main>
 
@@ -928,11 +1306,19 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <h3 className="text-lg font-extrabold text-white">Expediente Clínico</h3>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
                       <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 flex items-center gap-1 uppercase">
                         <Bed className="w-3 h-3" /> {selectedVisitForNurse.destination}
                       </span>
                       <span className="text-xs text-slate-400">Paciente: <strong className="text-white">{selectedVisitForNurse.patientName}</strong></span>
+                      {selectedVisitForNurse.age && <span className="text-xs text-slate-400">• Edad: <strong className="text-white">{selectedVisitForNurse.age} años</strong></span>}
+                      {selectedVisitForNurse.gender && <span className="text-xs text-slate-400">• Sexo: <strong className="text-white">{selectedVisitForNurse.gender}</strong></span>}
+                      {selectedVisitForNurse.allergies && <span className="text-xs text-rose-450">• Alergias: <strong className="text-rose-400">{selectedVisitForNurse.allergies}</strong></span>}
+                      {selectedVisitForNurse.chronicConditions && <span className="text-xs text-amber-450">• Crónicas: <strong className="text-amber-400">{selectedVisitForNurse.chronicConditions}</strong></span>}
+                      {selectedVisitForNurse.currentMedications && <span className="text-xs text-sky-450">• Medicación Actual: <strong className="text-sky-400">{selectedVisitForNurse.currentMedications}</strong></span>}
+                      {selectedVisitForNurse.lastMenstrualPeriod && (
+                        <span className="text-xs text-purple-405">• FUM: <strong className="text-purple-300">{new Date(selectedVisitForNurse.lastMenstrualPeriod).toLocaleDateString()}</strong></span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1190,10 +1576,126 @@ export default function DashboardPage() {
                     ) : (
                       <div className="p-6 rounded-2xl bg-slate-950/20 border border-dashed border-white/5 text-center flex flex-col items-center justify-center gap-2">
                         <Plus className="w-6 h-6 text-slate-700" />
-                        <p className="text-xs text-slate-500">No hay solicitudes de medicamentos para este paciente.</p>
+                        <p className="text-xs text-slate-500 font-medium">No hay solicitudes de medicamentos para este paciente.</p>
                       </div>
                     )}
                   </div>
+
+                  {/* Clinical Analyses Section */}
+                  <div className="space-y-4 pt-4 border-t border-white/5">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 animate-pulse" /> Análisis Clínicos ({clinicalAnalyses.filter(a => a.visitId === selectedVisitForNurse.id).length})
+                      </h4>
+                      <button
+                        onClick={() => {
+                          setSelectedVisitForAnalysis(selectedVisitForNurse);
+                          setNewAnalysisName('');
+                          setNewAnalysisScheduledAt(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                          setNewAnalysisNotes('');
+                          setShowAnalysisModal(true);
+                        }}
+                        className="h-6 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold uppercase tracking-wider transition-all duration-350 cursor-pointer flex items-center gap-1 shadow-[0_0_8px_rgba(99,102,241,0.2)]"
+                      >
+                        <Plus className="w-2.5 h-2.5" />
+                        Solicitar
+                      </button>
+                    </div>
+
+                    {(() => {
+                      const patientAnalyses = clinicalAnalyses.filter(a => a.visitId === selectedVisitForNurse.id);
+                      if (patientAnalyses.length === 0) {
+                        return (
+                          <div className="p-6 rounded-2xl bg-slate-950/20 border border-dashed border-white/5 text-center flex flex-col items-center justify-center gap-1.5 animate-fadeIn">
+                            <Activity className="w-6 h-6 text-slate-750" />
+                            <p className="text-[10px] text-slate-500 font-medium">No se han solicitado análisis clínicos para este paciente.</p>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="space-y-3 max-h-[35vh] overflow-y-auto pr-1 animate-fadeIn">
+                          {patientAnalyses.map(analysis => {
+                            const statusColors = {
+                              solicitado: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-405',
+                              realizado: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+                              'no realizado': 'bg-rose-500/10 border-rose-500/20 text-rose-450',
+                              reprogramado: 'bg-purple-500/10 border-purple-500/20 text-purple-405'
+                            };
+                            const badgeColor = statusColors[analysis.status] || 'bg-slate-800 text-slate-400';
+                            const isUpcoming = ['solicitado', 'reprogramado'].includes(analysis.status);
+
+                            return (
+                              <div key={analysis.id} className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 space-y-2 hover:border-indigo-500/10 transition-all duration-350 text-xs">
+                                <div className="flex justify-between items-start gap-1">
+                                  <span className="font-extrabold text-[11px] text-white leading-snug">{analysis.name}</span>
+                                  <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${badgeColor}`}>
+                                    {analysis.status}
+                                  </span>
+                                </div>
+                                
+                                <div className="text-[9px] text-slate-400 space-y-1">
+                                  <p>Programado: <span className="text-slate-350 font-semibold">{new Date(analysis.scheduledAt).toLocaleString()}</span></p>
+                                  {analysis.notes && <p className="italic text-slate-500">"{analysis.notes}"</p>}
+                                </div>
+
+                                {analysis.status === 'realizado' && analysis.results && (
+                                  <div className="mt-1.5 p-2 rounded bg-emerald-950/20 border border-emerald-500/5 text-[9px] space-y-1 text-left">
+                                    <p className="font-bold text-emerald-400 uppercase tracking-wider">RESULTADOS:</p>
+                                    <p className="text-slate-300 font-medium">"{analysis.results}"</p>
+                                    {analysis.incidences && (
+                                      <p className="text-slate-450 mt-1"><strong className="text-rose-450">Incidencias:</strong> {analysis.incidences}</p>
+                                    )}
+                                    {analysis.pdfUrl && (
+                                      <div className="mt-1.5 pt-1.5 border-t border-emerald-500/10 flex items-center">
+                                        <a 
+                                          href={analysis.pdfUrl} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer" 
+                                          className="text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
+                                        >
+                                          <FileText className="w-2.5 h-2.5" />
+                                          Ver PDF Completo
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {analysis.status === 'no realizado' && analysis.notDoneReason && (
+                                  <div className="mt-1.5 p-2 rounded bg-rose-950/20 border border-rose-500/5 text-[9px] text-left">
+                                    <p className="font-bold text-rose-400 uppercase tracking-wider">NO REALIZADO:</p>
+                                    <p className="text-slate-350 italic">"{analysis.notDoneReason}"</p>
+                                  </div>
+                                )}
+
+                                {isUpcoming && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedAnalysisForReview(analysis);
+                                      setReviewStatus(analysis.status === 'solicitado' ? 'realizado' : analysis.status);
+                                      setReviewResults(analysis.results || '');
+                                      setReviewNotes(analysis.notes || '');
+                                      setReviewIncidences(analysis.incidences || '');
+                                      setReviewNotDoneReason(analysis.notDoneReason || '');
+                                      setReviewRescheduledTo('');
+                                      setReviewRescheduledReason('');
+                                      setReviewPdfUrl(analysis.pdfUrl || '');
+                                      setShowReviewAnalysisModal(true);
+                                    }}
+                                    className="w-full h-7 mt-2 rounded bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/15 text-indigo-400 text-[9px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1"
+                                  >
+                                    <Edit className="w-2.5 h-2.5" />
+                                    Registrar Estado
+                                  </button>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
                 </div>
 
               </div>
@@ -1253,6 +1755,66 @@ export default function DashboardPage() {
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-1.5">Fecha y Hora del Chequeo <span className="text-indigo-400">*</span></label>
                   <input type="datetime-local" required value={newLoggedAt} onChange={(e) => setNewLoggedAt(e.target.value)} className="w-full h-11 px-4 rounded-lg glass-input text-xs" />
                 </div>
+
+                {/* Scheduled Medication Reminder Optional Block */}
+                <div className="p-4 rounded-xl border border-indigo-500/10 bg-indigo-500/5 space-y-4">
+                  <label className="flex items-center gap-2 text-xs font-bold text-indigo-400 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={reminderEnabled} 
+                      onChange={(e) => {
+                        setReminderEnabled(e.target.checked);
+                        if (e.target.checked && newMedicines) {
+                          setReminderMedName(newMedicines.split('\n')[0] || '');
+                        }
+                      }}
+                      className="rounded border-slate-700 bg-slate-950/40 text-indigo-500 cursor-pointer"
+                    />
+                    🔔 ¿Programar recordatorio periódico para medicamento?
+                  </label>
+                  
+                  {reminderEnabled && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 animate-fadeIn">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Medicamento a Recordar</label>
+                        <select
+                          value={reminderMedName}
+                          onChange={(e) => setReminderMedName(e.target.value)}
+                          required
+                          className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-350"
+                        >
+                          <option value="">-- Seleccionar --</option>
+                          {medications.map(med => (
+                            <option key={med.id} value={med.name} className="bg-slate-950 text-white">
+                              {med.name}
+                            </option>
+                          ))}
+                          {newMedicines && newMedicines.split('\n').filter(Boolean).map((typedMed, index) => (
+                            <option key={`typed-${index}`} value={typedMed} className="bg-slate-950 text-white">
+                              {typedMed} (Escrito arriba)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Frecuencia / Intervalo</label>
+                        <select
+                          value={reminderInterval}
+                          onChange={(e) => setReminderInterval(parseInt(e.target.value, 10))}
+                          required
+                          className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-350"
+                        >
+                          <option value={4}>Cada 4 horas</option>
+                          <option value={6}>Cada 6 horas</option>
+                          <option value={8}>Cada 8 horas</option>
+                          <option value={12}>Cada 12 horas</option>
+                          <option value={24}>Cada 24 horas (diario)</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-3 pt-4 border-t border-white/5">
                   <button type="button" onClick={() => setShowAddNurseLogModal(false)} className="flex-1 h-11 rounded-lg border border-slate-700 bg-slate-900/40 text-slate-400 hover:text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer">
                     Cancelar
@@ -1266,6 +1828,168 @@ export default function DashboardPage() {
           </div>
         )}
 
+      </div>
+    );
+  };
+
+  const renderClinicalAgenda = () => {
+    // Group clinical analyses by date
+    const groupedAnalyses = {};
+    clinicalAnalyses.forEach(analysis => {
+      if (!analysis.scheduledAt) return;
+      const dateStr = new Date(analysis.scheduledAt).toLocaleDateString('es-MX', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      if (!groupedAnalyses[dateStr]) {
+        groupedAnalyses[dateStr] = [];
+      }
+      groupedAnalyses[dateStr].push(analysis);
+    });
+
+    return (
+      <div className="space-y-6 text-left animate-fadeIn">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div>
+            <h3 className="text-lg font-bold text-white Outfit flex items-center gap-2">
+              <Calendar className="w-5.5 h-5.5 text-indigo-400" />
+              Agenda y Calendario de Estudios Clínicos
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">Monitoreo global de análisis programados en hospitalización y urgencias.</p>
+          </div>
+          <button
+            onClick={fetchDashboardData}
+            className="self-start sm:self-auto h-9 px-3 rounded-lg border border-white/5 hover:border-slate-700 bg-slate-900/40 hover:bg-slate-800 text-slate-350 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5 animate-spin-slow" />
+            Actualizar Agenda
+          </button>
+        </div>
+
+        {clinicalAnalyses.length === 0 ? (
+          <div className="glass-panel p-16 text-center rounded-2xl flex flex-col items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center border border-slate-800">
+              <Activity className="w-6 h-6 text-slate-600" />
+            </div>
+            <h4 className="text-white font-bold text-sm">No hay estudios programados</h4>
+            <p className="text-xs text-slate-500 max-w-sm">No se han registrado solicitudes de análisis clínicos o de laboratorio en el sistema.</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {Object.keys(groupedAnalyses).map(dateStr => (
+              <div key={dateStr} className="space-y-3">
+                <h4 className="text-xs font-extrabold text-indigo-400 uppercase tracking-widest pl-2 border-l-2 border-indigo-500 capitalize">
+                  {dateStr}
+                </h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {groupedAnalyses[dateStr].map(analysis => {
+                    const statusColors = {
+                      solicitado: 'border-yellow-500/20 bg-yellow-500/5 text-yellow-405',
+                      realizado: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400',
+                      'no realizado': 'border-rose-500/20 bg-rose-500/5 text-rose-450',
+                      reprogramado: 'border-purple-500/20 bg-purple-500/5 text-purple-400'
+                    };
+                    const badgeColor = statusColors[analysis.status] || 'border-slate-500/20 bg-slate-500/5 text-slate-400';
+                    const isUpcoming = ['solicitado', 'reprogramado'].includes(analysis.status);
+
+                    return (
+                      <div key={analysis.id} className="glass-panel rounded-xl p-5 border border-white/5 flex flex-col justify-between gap-4 hover:border-indigo-500/20 transition-all duration-300">
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5" />
+                              {new Date(analysis.scheduledAt).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${badgeColor}`}>
+                              {analysis.status}
+                            </span>
+                          </div>
+
+                          <h5 className="font-extrabold text-white text-sm leading-tight">{analysis.name}</h5>
+                          
+                          <div className="space-y-1.5 text-xs border-t border-white/5 pt-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+                                {analysis.visit?.destination || 'Habitación'}
+                              </span>
+                              <span className="text-slate-300 font-semibold">{analysis.visit?.patientName}</span>
+                            </div>
+                            
+                            <p className="text-[10px] text-slate-500 mt-1 pl-1">
+                              Solicitado por: <span className="text-slate-300 font-medium">{analysis.requestedBy}</span> ({analysis.requestedRole === 'medico' ? 'Médico' : 'Enfermero'})
+                            </p>
+                            
+                            {analysis.notes && (
+                              <p className="text-[10px] text-slate-400 italic bg-slate-950/40 p-2 rounded border border-white/5 mt-2">
+                                Indicaciones: "{analysis.notes}"
+                              </p>
+                            )}
+
+                            {analysis.status === 'realizado' && analysis.results && (
+                              <div className="mt-2 p-2.5 rounded bg-emerald-950/20 border border-emerald-500/10 text-[10px] space-y-1">
+                                <p className="font-bold text-emerald-400 uppercase tracking-wider">Resultados:</p>
+                                <p className="text-slate-200 italic">"{analysis.results}"</p>
+                                {analysis.incidences && (
+                                  <p className="text-slate-450 mt-1 pl-1"><strong className="text-rose-400">Incidencias:</strong> {analysis.incidences}</p>
+                                )}
+                                {analysis.pdfUrl && (
+                                  <div className="mt-2 pt-1.5 border-t border-emerald-500/10 flex items-center">
+                                    <a 
+                                      href={analysis.pdfUrl} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer" 
+                                      className="text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer text-[10px]"
+                                    >
+                                      <FileText className="w-3 h-3" />
+                                      Ver PDF Completo
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {analysis.status === 'no realizado' && analysis.notDoneReason && (
+                              <div className="mt-2 p-2.5 rounded bg-rose-950/20 border border-rose-500/10 text-[10px] space-y-1">
+                                <p className="font-bold text-rose-450 uppercase tracking-wider">Motivo de no realización:</p>
+                                <p className="text-slate-200 italic">"{analysis.notDoneReason}"</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {isUpcoming && (
+                          <button
+                            onClick={() => {
+                              setSelectedAnalysisForReview(analysis);
+                              setReviewStatus(analysis.status === 'solicitado' ? 'realizado' : analysis.status);
+                              setReviewResults(analysis.results || '');
+                              setReviewNotes(analysis.notes || '');
+                              setReviewIncidences(analysis.incidences || '');
+                              setReviewNotDoneReason(analysis.notDoneReason || '');
+                              setReviewRescheduledTo('');
+                              setReviewRescheduledReason('');
+                              setReviewPdfUrl(analysis.pdfUrl || '');
+                              setShowReviewAnalysisModal(true);
+                            }}
+                            className="w-full h-8.5 rounded-lg border border-indigo-500/20 hover:border-indigo-500/40 bg-indigo-500/5 hover:bg-indigo-500/10 text-indigo-400 text-xs font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                            Registrar Resultados
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {renderPortalModals()}
       </div>
     );
   };
@@ -1388,8 +2112,89 @@ export default function DashboardPage() {
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col space-y-6">
           
+          {/* Alertas de Medicamentos Vencidas */}
+          {(() => {
+            const overdueReminders = medicationReminders.filter(
+              r => r.status === 'activo' && new Date(r.nextDoseAt) <= currentTime
+            );
+            if (overdueReminders.length === 0) return null;
+            return (
+              <div className="glass-panel border-rose-500/20 bg-rose-950/10 p-5 rounded-2xl space-y-4 shadow-[0_0_20px_rgba(239,68,68,0.05)] animate-fadeIn mb-2">
+                <div className="flex items-center justify-between border-b border-rose-500/10 pb-3 text-left">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center border border-rose-500/20 text-rose-400 animate-pulse">
+                      <Bell className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-white text-sm uppercase tracking-wider Outfit">Tomas de Medicamentos Pendientes</h4>
+                      <p className="text-[10px] text-rose-455 font-medium">Hay {overdueReminders.length} dosis recurrentes de pacientes que requieren atención inmediata.</p>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-bold bg-rose-500/10 text-rose-455 px-2 py-0.5 rounded uppercase tracking-wider border border-rose-500/20">
+                    Control de Enfermería
+                  </span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                  {overdueReminders.map(reminder => {
+                    const minutesAgo = Math.round((currentTime - new Date(reminder.nextDoseAt)) / 60000);
+                    const timeText = minutesAgo <= 0 ? 'Ahora' : `Hace ${minutesAgo} min`;
+                    return (
+                      <div key={reminder.id} className="p-4 rounded-xl bg-slate-950/40 border border-white/5 flex flex-col justify-between gap-3 hover:border-rose-500/30 transition-all duration-300">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="space-y-1">
+                            <span className="text-[9px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">
+                              {reminder.visit?.destination || 'Habitación'}
+                            </span>
+                            <h5 className="font-bold text-white text-xs mt-1">{reminder.visit?.patientName}</h5>
+                            <p className="text-[11px] font-semibold text-slate-350 flex items-center gap-1.5 mt-1">
+                              <Pill className="w-3.5 h-3.5 text-indigo-400" />
+                              {reminder.medicationName}
+                            </p>
+                            <p className="text-[10px] text-slate-400">Pauta: Cada {reminder.intervalHours} horas</p>
+                          </div>
+                          
+                          <span className="text-[10px] font-bold text-rose-405 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {timeText}
+                          </span>
+                        </div>
+                        
+                        <div className="flex gap-2 pt-2 border-t border-white/5">
+                          <button
+                            onClick={() => handleUpdateReminder(reminder.id, 'administer')}
+                            className="flex-1 h-8 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-350 shadow-[0_0_10px_rgba(16,185,129,0.15)] flex items-center justify-center gap-1"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Registrar Toma
+                          </button>
+                          
+                          <button
+                            onClick={() => handleUpdateReminder(reminder.id, 'complete')}
+                            className="h-8 px-3 rounded-lg border border-slate-700 bg-slate-900/40 hover:bg-slate-800 text-slate-400 hover:text-white text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300"
+                            title="Completar ciclo (Apagar recordatorios)"
+                          >
+                            Terminar
+                          </button>
+                          
+                          <button
+                            onClick={() => handleUpdateReminder(reminder.id, 'cancel')}
+                            className="h-8 px-2.5 rounded-lg border border-rose-500/15 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300"
+                            title="Cancelar ciclo por prescripción"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Navigation tabs */}
           <div className="flex items-center gap-2 border-b border-white/5 pb-px mb-8 overflow-x-auto">
             <button
@@ -1461,6 +2266,23 @@ export default function DashboardPage() {
               <span className="bg-slate-800 text-slate-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-1">
                 {myTreatedPatients.length}
               </span>
+            </button>
+
+            <button
+              onClick={() => setDocTab('clinical-agenda')}
+              className={`py-3 px-4 text-xs font-bold uppercase tracking-wider border-b-2 transition-all duration-300 flex items-center gap-2 cursor-pointer ${
+                docTab === 'clinical-agenda'
+                  ? 'border-emerald-400 text-emerald-400 font-extrabold'
+                  : 'border-transparent text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Calendar className="w-4.5 h-4.5 text-indigo-400" />
+              Agenda de Estudios
+              {clinicalAnalyses.filter(a => ['solicitado', 'reprogramado'].includes(a.status)).length > 0 && (
+                <span className="bg-indigo-500/20 text-indigo-350 border border-indigo-500/30 text-[9px] font-bold px-1.5 py-0.5 rounded-full ml-1">
+                  {clinicalAnalyses.filter(a => ['solicitado', 'reprogramado'].includes(a.status)).length}
+                </span>
+              )}
             </button>
 
             <button
@@ -1582,6 +2404,21 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 self-start sm:self-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedVisitForAnalysis(selectedPatient);
+                            setNewAnalysisName('');
+                            setNewAnalysisScheduledAt(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                            setNewAnalysisNotes('');
+                            setShowAnalysisModal(true);
+                          }}
+                          className="px-3 py-1.5 rounded-lg border border-indigo-500/30 hover:border-indigo-500/50 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 text-xs font-bold transition-all duration-300 cursor-pointer flex items-center gap-1.5 shadow-[0_0_12px_rgba(99,102,241,0.1)]"
+                          title="Solicitar Estudio / Análisis Clínico"
+                        >
+                          <Activity className="w-4 h-4" />
+                          Solicitar Estudio
+                        </button>
                         {selectedPatient.type === 'hospitalizaciones' && (
                           <button
                             type="button"
@@ -1602,47 +2439,217 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* Historical Clinical timeline */}
-                    <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5">
-                      <h5 className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                        <FileText className="w-3.5 h-3.5" />
-                        Historial de Consultas Anteriores
-                      </h5>
+                    {/* Historical Timeline & Clinical Analyses Side-by-Side */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Left: Antecedentes */}
+                      <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 flex flex-col justify-between text-left">
+                        <div>
+                          <h5 className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                            <FileText className="w-3.5 h-3.5" />
+                            Historial de Consultas Anteriores
+                          </h5>
 
-                      {historyLoadingDoc ? (
-                        <div className="py-6 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-                          <Activity className="w-4 h-4 text-indigo-400 pulse-glow" />
-                          <span>Cargando antecedentes...</span>
-                        </div>
-                      ) : selectedPatientHistory.length > 0 ? (
-                        <div className="space-y-3 max-h-36 overflow-y-auto pr-1">
-                          {selectedPatientHistory.map((hist) => (
-                            <div key={hist.id} className="p-3 rounded-lg bg-slate-900/50 border border-white/5 text-xs text-slate-300">
-                              <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold mb-1.5">
-                                <span>📅 {new Date(hist.checkInTime).toLocaleDateString()} - Consulta de {hist.destination}</span>
-                                <span className="text-indigo-400">Dr. {hist.doctor?.name || 'Médico'}</span>
-                              </div>
-                              <p className="mt-1 font-semibold text-white">Diagnóstico/Padecimientos:</p>
-                              <p className="text-slate-300 pl-2 italic">"{hist.ailments || 'No especificados'}"</p>
-                              <p className="mt-1 font-semibold text-white">Tratamiento prescrito:</p>
-                              <p className="text-slate-300 pl-2 italic">"{hist.medicines || 'Sin medicamentos prescritos'}"</p>
-                              {hist.followUp && (
-                                <>
-                                  <p className="mt-1 font-semibold text-white">Seguimiento:</p>
-                                  <p className="text-slate-300 pl-2 italic">"{hist.followUp}"</p>
-                                </>
-                              )}
+                          {historyLoadingDoc ? (
+                            <div className="py-6 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                              <Activity className="w-4 h-4 text-indigo-400 pulse-glow" />
+                              <span>Cargando antecedentes...</span>
                             </div>
-                          ))}
+                          ) : selectedPatientHistory.length > 0 ? (
+                            <div className="space-y-3 max-h-36 overflow-y-auto pr-1">
+                              {selectedPatientHistory.map((hist) => (
+                                <div key={hist.id} className="p-3 rounded-lg bg-slate-900/50 border border-white/5 text-xs text-slate-350">
+                                  <div className="flex items-center justify-between text-[10px] text-slate-405 font-bold mb-1.5">
+                                    <span>📅 {new Date(hist.checkInTime).toLocaleDateString()} - {hist.destination}</span>
+                                    <span className="text-indigo-400">Dr. {hist.doctor?.name || 'Médico'}</span>
+                                  </div>
+                                  <p className="mt-1 font-semibold text-white">Diagnóstico/Padecimientos:</p>
+                                  <p className="text-slate-300 pl-2 italic">"{hist.ailments || 'No especificados'}"</p>
+                                  <p className="mt-1 font-semibold text-white">Tratamiento prescrito:</p>
+                                  <p className="text-slate-300 pl-2 italic">"{hist.medicines || 'Sin medicamentos prescritos'}"</p>
+                                  {hist.followUp && (
+                                    <>
+                                      <p className="mt-1 font-semibold text-white">Seguimiento:</p>
+                                      <p className="text-slate-300 pl-2 italic">"{hist.followUp}"</p>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-slate-500 italic py-2 pl-1">No se registran antecedentes clínicos de consultas anteriores para este paciente.</p>
+                          )}
                         </div>
-                      ) : (
-                        <p className="text-xs text-slate-500 italic py-2 pl-1">No se registran antecedentes clínicos de consultas anteriores para este paciente.</p>
-                      )}
+                      </div>
+
+                      {/* Right: Estudios Clínicos */}
+                      <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 flex flex-col justify-between text-left">
+                        <div>
+                          <div className="flex justify-between items-center mb-3">
+                            <h5 className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                              <Activity className="w-3.5 h-3.5" />
+                              Estudios Clínicos Solicitados
+                            </h5>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedVisitForAnalysis(selectedPatient);
+                                setNewAnalysisName('');
+                                setNewAnalysisScheduledAt(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                                setNewAnalysisNotes('');
+                                setShowAnalysisModal(true);
+                              }}
+                              className="text-[9px] font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-0.5 rounded hover:bg-indigo-500/20 transition-all uppercase cursor-pointer"
+                            >
+                              + Solicitar
+                            </button>
+                          </div>
+
+                          {clinicalAnalyses.filter(a => a.visitId === selectedPatient.id).length > 0 ? (
+                            <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                              {clinicalAnalyses.filter(a => a.visitId === selectedPatient.id).map(analysis => {
+                                const statusColors = {
+                                  solicitado: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-405',
+                                  realizado: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+                                  'no realizado': 'bg-rose-500/10 border-rose-500/20 text-rose-450',
+                                  reprogramado: 'bg-purple-500/10 border-purple-500/20 text-purple-405'
+                                };
+                                const badgeColor = statusColors[analysis.status] || 'bg-slate-800 text-slate-400';
+                                
+                                return (
+                                  <div key={analysis.id} className="p-2.5 rounded bg-slate-900/50 border border-white/5 text-[11px] text-slate-350 flex justify-between items-start gap-2">
+                                    <div className="space-y-1">
+                                      <p className="font-bold text-white text-[11px]">{analysis.name}</p>
+                                      <p className="text-[10px] text-slate-500">Programado: {new Date(analysis.scheduledAt).toLocaleString()}</p>
+                                      {analysis.notes && <p className="text-[10px] text-slate-400 italic">"Nota: {analysis.notes}"</p>}
+                                      {analysis.status === 'realizado' && analysis.results && (
+                                        <div className="mt-1.5 p-2 rounded bg-emerald-950/20 border border-emerald-500/10 text-[10px] text-emerald-350">
+                                          <span className="font-bold uppercase block text-[9px] text-emerald-400">Resultados:</span>
+                                          "{analysis.results}"
+                                          {analysis.incidences && <p className="text-[9px] text-rose-400 mt-0.5 font-medium">Incidencias: {analysis.incidences}</p>}
+                                          {analysis.pdfUrl && (
+                                            <a 
+                                              href={analysis.pdfUrl} 
+                                              target="_blank" 
+                                              rel="noopener noreferrer" 
+                                              className="mt-1.5 pt-1 border-t border-emerald-500/10 text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer text-[9px]"
+                                            >
+                                              <FileText className="w-2.5 h-2.5" />
+                                              Ver PDF Completo
+                                            </a>
+                                          )}
+                                        </div>
+                                      )}
+                                      {analysis.status === 'no realizado' && analysis.notDoneReason && (
+                                        <p className="text-[10px] text-rose-400 italic">Motivo no realizado: "{analysis.notDoneReason}"</p>
+                                      )}
+                                    </div>
+                                    <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded border shrink-0 ${badgeColor}`}>
+                                      {analysis.status}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-slate-500 italic py-2 pl-1">No se han solicitado estudios clínicos para este paciente.</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     {/* EMR Diagnosis Form */}
                     <form onSubmit={handleCompleteConsultation} className="space-y-4">
                       
+                      {/* Patient Profile Fields Block */}
+                      <div className="p-5 rounded-xl border border-white/5 bg-slate-950/40 space-y-4 text-left">
+                        <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-white/5 pb-2 mb-3">
+                          <Users className="w-4 h-4" />
+                          Ficha Clínica / Antecedentes Personales
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {/* Age */}
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Edad</label>
+                            <input 
+                              type="number" 
+                              min="0"
+                              placeholder="Años"
+                              value={clinicalAge}
+                              onChange={(e) => setClinicalAge(e.target.value)}
+                              className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                            />
+                          </div>
+
+                          {/* Gender */}
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Sexo</label>
+                            <select
+                              value={clinicalGender}
+                              onChange={(e) => setClinicalGender(e.target.value)}
+                              className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-350"
+                            >
+                              <option value="">-- Seleccionar --</option>
+                              <option value="Masculino">Masculino</option>
+                              <option value="Femenino">Femenino</option>
+                              <option value="Otro">Otro</option>
+                            </select>
+                          </div>
+
+                          {/* Last Menstrual Period Date - only if female */}
+                          <div>
+                            <label className={`block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1 ${clinicalGender === 'Femenino' ? 'text-indigo-400' : 'opacity-40'}`}>
+                              Última Menstruación (FUM)
+                            </label>
+                            <input 
+                              type="date" 
+                              disabled={clinicalGender !== 'Femenino'}
+                              value={clinicalLastMenstrualPeriod}
+                              onChange={(e) => setClinicalLastMenstrualPeriod(e.target.value)}
+                              className={`w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white ${clinicalGender !== 'Femenino' ? 'opacity-40 cursor-not-allowed' : ''}`}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {/* Allergies */}
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Alergias</label>
+                            <input 
+                              type="text" 
+                              placeholder="Ninguna, Polvo, Penicilina..."
+                              value={clinicalAllergies}
+                              onChange={(e) => setClinicalAllergies(e.target.value)}
+                              className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                            />
+                          </div>
+
+                          {/* Chronic Conditions */}
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Condiciones Especiales / Crónicas</label>
+                            <input 
+                              type="text" 
+                              placeholder="Hipertensión, Diabetes..."
+                              value={clinicalChronicConditions}
+                              onChange={(e) => setClinicalChronicConditions(e.target.value)}
+                              className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                            />
+                          </div>
+
+                          {/* Current Medications */}
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-405 uppercase tracking-wider mb-1">Medicamentos Actuales</label>
+                            <input 
+                              type="text" 
+                              placeholder="Metformina 850mg c/12h..."
+                              value={clinicalCurrentMedications}
+                              onChange={(e) => setClinicalCurrentMedications(e.target.value)}
+                              className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Diagnosis / Ailments */}
                       <div>
                         <label className="block text-xs font-semibold text-slate-300 uppercase tracking-widest mb-1.5">
@@ -2059,6 +3066,37 @@ export default function DashboardPage() {
                         {isExpanded && (
                           <div className="border-t border-white/5 p-4 sm:p-6 space-y-6 bg-slate-950/20">
 
+                            {/* Patient Info Header / Action */}
+                            <div className="flex items-center justify-between border-b border-white/5 pb-3 flex-wrap gap-2">
+                              <h5 className="text-[10px] font-bold text-emerald-450 uppercase tracking-widest flex items-center gap-1.5">
+                                <FileText className="w-3.5 h-3.5" /> Ficha de Identificación del Paciente
+                              </h5>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedVisitForAnalysis(patient);
+                                    setNewAnalysisName('');
+                                    setNewAnalysisScheduledAt(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                                    setNewAnalysisNotes('');
+                                    setShowAnalysisModal(true);
+                                  }}
+                                  className="text-[9px] text-indigo-400 hover:text-white border border-indigo-500/20 hover:border-indigo-500 bg-indigo-500/5 hover:bg-indigo-500/20 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1 shadow-[0_0_8px_rgba(99,102,241,0.1)]"
+                                >
+                                  <Activity className="w-3 h-3" /> Solicitar Estudio
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditPatientClick(patient);
+                                  }}
+                                  className="text-[9px] text-emerald-400 hover:text-white border border-emerald-500/20 hover:border-emerald-500 bg-emerald-500/5 hover:bg-emerald-500/20 px-2.5 py-1.5 rounded-lg font-bold transition-all cursor-pointer flex items-center gap-1"
+                                >
+                                  <Edit className="w-3 h-3" /> Editar Ficha / Expediente
+                                </button>
+                              </div>
+                            </div>
+
                             {/* Contact Info */}
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                               <div className="p-3 rounded-xl bg-slate-900/40 border border-white/5">
@@ -2076,6 +3114,44 @@ export default function DashboardPage() {
                               <div className="p-3 rounded-xl bg-slate-900/40 border border-white/5">
                                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Motivo</p>
                                 <p className="text-slate-200 font-medium italic truncate" title={patient.reason}>"{patient.reason}"</p>
+                              </div>
+                            </div>
+
+                            {/* Clinical Info / Ficha Clínica */}
+                            <div className="border-t border-white/5 pt-5 space-y-4">
+                              <h5 className="text-[10px] font-bold text-emerald-450 uppercase tracking-widest flex items-center gap-1.5">
+                                <FileText className="w-3.5 h-3.5" /> Ficha Médica y Antecedentes
+                              </h5>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                                <div className="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Edad</p>
+                                  <p className="text-slate-200 font-medium">{patient.age ? `${patient.age} años` : 'No registrada'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Género</p>
+                                  <p className="text-slate-200 font-medium">{patient.gender || 'No registrado'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Condiciones Crónicas</p>
+                                  <p className="text-slate-200 font-medium truncate" title={patient.chronicConditions}>{patient.chronicConditions || 'Ninguna'}</p>
+                                </div>
+                                <div className="p-3 rounded-xl bg-slate-900/40 border border-white/5">
+                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Alergias</p>
+                                  <p className="text-rose-400 font-medium truncate" title={patient.allergies}>{patient.allergies || 'Ninguna'}</p>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                <div className="p-3.5 rounded-xl bg-slate-900/40 border border-white/5">
+                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Medicamentos que toma actualmente</p>
+                                  <p className="text-slate-200 whitespace-pre-wrap">{patient.currentMedications || 'Ninguno'}</p>
+                                </div>
+                                {patient.gender === 'Femenino' && (
+                                  <div className="p-3.5 rounded-xl bg-slate-900/40 border border-white/5">
+                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Última Fecha de Menstruación (FUM)</p>
+                                    <p className="text-slate-200 font-medium">{patient.lastMenstrualPeriod ? new Date(patient.lastMenstrualPeriod).toLocaleDateString() : 'No registrada'}</p>
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -2398,12 +3474,20 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* TAB: CLINICAL ANALYSIS AGENDA */}
+          {docTab === 'clinical-agenda' && (
+            <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-indigo-500/10 shadow-2xl bg-slate-950/40">
+              {renderClinicalAgenda()}
+            </div>
+          )}
+
         </main>
 
         {/* Footer */}
         <footer className="py-6 border-t border-white/5 text-center text-xs text-slate-500 mt-12">
           <p>&copy; {new Date().getFullYear()} Aozora Care-Flow. Portal Médico de Turno ({session.name}).</p>
         </footer>
+        {renderPortalModals()}
       </div>
     );
   };
@@ -2932,11 +4016,21 @@ export default function DashboardPage() {
         <footer className="py-6 border-t border-white/5 text-center text-xs text-slate-500 mt-12 bg-slate-950/20">
           <p>&copy; {new Date().getFullYear()} Aozora Care-Flow. Consola Médica & Farmacéutica ({session.role}).</p>
         </footer>
+        {renderPortalModals()}
       </div>
     );
   };
 
   // Fetch session on mount
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     checkSession();
   }, []);
@@ -2971,7 +4065,7 @@ export default function DashboardPage() {
 
   const fetchDashboardData = async () => {
     try {
-      const [visitsRes, rolesRes, usersRes, clinicsRes, doctorsRes, roomsRes, pharmacyRes, medicationsRes] = await Promise.all([
+      const [visitsRes, rolesRes, usersRes, clinicsRes, doctorsRes, roomsRes, pharmacyRes, medicationsRes, analysesRes, remindersRes] = await Promise.all([
         fetch('/api/visits').then(r => r.json()),
         fetch('/api/roles').then(r => r.json()),
         fetch('/api/users').then(r => r.json()),
@@ -2979,7 +4073,9 @@ export default function DashboardPage() {
         fetch('/api/doctors').then(r => r.json()),
         fetch('/api/rooms').then(r => r.json()),
         fetch('/api/pharmacy-requests').then(r => r.json()),
-        fetch('/api/medications').then(r => r.json())
+        fetch('/api/medications').then(r => r.json()),
+        fetch('/api/clinical-analyses').then(r => r.json()),
+        fetch('/api/medication-reminders').then(r => r.json())
       ]);
 
       if (visitsRes.success) setVisits(visitsRes.visits);
@@ -2990,6 +4086,8 @@ export default function DashboardPage() {
       if (roomsRes.success) setRooms(roomsRes.rooms);
       if (pharmacyRes.success) setPharmacyRequests(pharmacyRes.requests);
       if (medicationsRes.success) setMedications(medicationsRes.medications);
+      if (analysesRes.success) setClinicalAnalyses(analysesRes.analyses);
+      if (remindersRes.success) setMedicationReminders(remindersRes.reminders);
     } catch (err) {
       console.error('Error fetching dashboard lists:', err);
     }
@@ -3480,8 +4578,34 @@ export default function DashboardPage() {
   };
 
   // Filter logic for active monitoring
-  const activeVisits = visits.filter(v => v.status === 'in house');
+  const presentUsers = users.filter(u => u.isPresent).map(u => {
+    const isDoc = u.role && u.role.name === 'medico';
+    const docInfo = isDoc ? doctors.find(d => d.userId === u.id) : null;
+    const dest = docInfo && docInfo.clinic ? docInfo.clinic.name : (isDoc ? 'Consultorio' : 'Hospital / Guardia');
+    return {
+      id: u.id,
+      patientName: u.name,
+      email: u.username,
+      phone: isDoc && docInfo ? docInfo.phone : null,
+      type: isDoc ? 'medico' : 'personal',
+      destination: dest,
+      reason: isDoc ? `Guardia Médica (${docInfo ? docInfo.specialty : 'Especialista'})` : `Turno Activo (${u.role ? u.role.description || u.role.name : 'Personal'})`,
+      visitorCompanion: '',
+      checkInTime: u.updatedAt || u.createdAt,
+      status: 'in house',
+      isStaff: true
+    };
+  });
+
+  const activeVisits = [
+    ...visits.filter(v => v.status === 'in house'),
+    ...presentUsers
+  ];
   const finishedVisits = visits.filter(v => v.status === 'fuera');
+
+  const totalBeds = rooms.length || 7;
+  const occupiedBeds = activeVisits.filter(v => v.type === 'hospitalizaciones').length;
+  const freeBeds = Math.max(0, totalBeds - occupiedBeds);
 
   const filteredFinishedVisits = finishedVisits.filter(v => {
     // 1. Patient Type Filter
@@ -3658,45 +4782,72 @@ export default function DashboardPage() {
           <div className="space-y-6">
             
             {/* Stat Widgets */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               
-              {/* Widget 1 */}
+              {/* Widget 1: Aforo General */}
               <div className="glass-panel rounded-2xl p-6 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
                   <Users className="w-6 h-6 text-emerald-400 pulse-glow" />
                 </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">En el Hospital (In House)</p>
-                  <p className="text-3xl font-extrabold text-white mt-1">{activeVisits.length}</p>
+                <div className="space-y-0.5">
+                  <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Aforo General Hospital</p>
+                  <p className="text-2xl font-black text-white">{activeVisits.length} <span className="text-slate-550 font-normal text-xs">/ 50</span></p>
+                  <p className="text-[9px] text-slate-500 font-semibold">{Math.round((activeVisits.length / 50) * 100)}% Ocupación Total</p>
                 </div>
               </div>
 
-              {/* Widget 2 */}
+              {/* Widget 2: Aforo Urgencias */}
               <div className="glass-panel rounded-2xl p-6 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
-                  <ShieldAlert className="w-6 h-6 text-rose-400" />
+                  <ShieldAlert className="w-6 h-6 text-rose-450" />
                 </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Casos en Urgencias</p>
-                  <p className="text-3xl font-extrabold text-white mt-1">
-                    {activeVisits.filter(v => v.type === 'urgencias').length}
+                <div className="space-y-0.5">
+                  <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Aforo en Urgencias</p>
+                  <p className="text-2xl font-black text-white">
+                    {activeVisits.filter(v => v.type === 'urgencias').length} <span className="text-slate-550 font-normal text-xs">/ 15</span>
+                  </p>
+                  <p className={`text-[9px] font-bold ${
+                    activeVisits.filter(v => v.type === 'urgencias').length >= 12 
+                      ? 'text-rose-450 animate-pulse' 
+                      : 'text-emerald-500'
+                  }`}>
+                    {activeVisits.filter(v => v.type === 'urgencias').length >= 12 
+                      ? '⚠️ ALERTA: Aforo Límite' 
+                      : '🟢 Estado Estable'}
                   </p>
                 </div>
               </div>
 
-              {/* Widget 3 */}
+              {/* Widget 3: Capacidad de Camas */}
               <div className="glass-panel rounded-2xl p-6 flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                  <Clock className="w-6 h-6 text-indigo-400" />
+                  <Bed className="w-6 h-6 text-indigo-400" />
                 </div>
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Ingresos Registrados Hoy</p>
-                  <p className="text-3xl font-extrabold text-white mt-1">
+                <div className="space-y-0.5">
+                  <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Capacidad de Camas</p>
+                  <p className="text-2xl font-black text-white">
+                    {freeBeds} <span className="text-slate-550 font-normal text-xs">/ {totalBeds} Libres</span>
+                  </p>
+                  <p className="text-[9px] text-slate-500 font-semibold">
+                    {occupiedBeds} Camas Ocupadas
+                  </p>
+                </div>
+              </div>
+
+              {/* Widget 4: Ingresos Hoy */}
+              <div className="glass-panel rounded-2xl p-6 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
+                  <Clock className="w-6 h-6 text-sky-400" />
+                </div>
+                <div className="space-y-0.5">
+                  <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Ingresos Registrados Hoy</p>
+                  <p className="text-2xl font-black text-white">
                     {visits.filter(v => {
                       const today = new Date().toDateString();
                       return new Date(v.checkInTime).toDateString() === today;
                     }).length}
                   </p>
+                  <p className="text-[9px] text-slate-500 font-semibold">Flujo continuo en accesos</p>
                 </div>
               </div>
 
@@ -3712,7 +4863,9 @@ export default function DashboardPage() {
                   { id: 'visitante', label: 'Visitantes' },
                   { id: 'paciente', label: 'Pacientes' },
                   { id: 'urgencias', label: 'Urgencias' },
-                  { id: 'hospitalizaciones', label: 'Hosp.' }
+                  { id: 'hospitalizaciones', label: 'Hosp.' },
+                  { id: 'medico', label: 'Médicos' },
+                  { id: 'personal', label: 'Staff' }
                 ].map(item => (
                   <button
                     key={item.id}
@@ -3792,9 +4945,13 @@ export default function DashboardPage() {
                                 ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
                                 : visit.type === 'hospitalizaciones'
                                 ? 'bg-indigo-500/10 border border-indigo-500/20 text-indigo-400'
+                                : visit.type === 'medico'
+                                ? 'bg-sky-500/10 border border-sky-500/20 text-sky-400'
+                                : visit.type === 'personal'
+                                ? 'bg-purple-500/10 border border-purple-500/20 text-purple-400'
                                 : 'bg-slate-800 border border-slate-700 text-slate-300'
                             }`}>
-                              {visit.type}
+                              {visit.type === 'hospitalizaciones' ? 'hospitalización' : visit.type}
                             </span>
                           </td>
                           <td className="p-4">
@@ -3834,20 +4991,40 @@ export default function DashboardPage() {
                                   Bitácora
                                 </button>
                               )}
-                              <button
-                                onClick={() => handleForceCheckOut(visit.id, visit.patientName)}
-                                className="px-3 py-1.5 rounded-lg border border-rose-500/20 hover:border-rose-500/40 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer"
-                                title="Registrar Salida de la Persona"
-                              >
-                                Check-Out
-                              </button>
+                              {!visit.isStaff && (
+                                <button
+                                  onClick={() => handleEditPatientClick(visit)}
+                                  className="px-2.5 py-1.5 rounded-lg border border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center gap-1 shadow-[0_0_8px_rgba(16,185,129,0.1)]"
+                                  title="Editar Ficha / Expediente Completo"
+                                >
+                                  <Edit className="w-3.5 h-3.5" />
+                                  Editar Ficha
+                                </button>
+                              )}
+                              {visit.isStaff ? (
+                                <button
+                                  onClick={() => handleTogglePresence(visit.id)}
+                                  className="px-3 py-1.5 rounded-lg border border-rose-500/20 hover:border-rose-500/40 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer"
+                                  title="Marcar salida del personal (Fijar Ausente)"
+                                >
+                                  Marcar Ausente
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleForceCheckOut(visit.id, visit.patientName)}
+                                  className="px-3 py-1.5 rounded-lg border border-rose-500/20 hover:border-rose-500/40 bg-rose-500/5 hover:bg-rose-500/10 text-rose-400 text-[10px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer"
+                                  title="Registrar Salida de la Persona"
+                                >
+                                  Check-Out
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="p-12 text-center text-slate-500">
+                        <td colSpan="8" className="p-12 text-center text-slate-500">
                           <div className="flex flex-col items-center gap-3">
                             <Users className="w-8 h-8 text-slate-700" />
                             <div>
@@ -4824,7 +6001,176 @@ export default function DashboardPage() {
                       </div>
                     )}
                   </div>
+
+                {/* ---- MEDICATION CATALOG MANAGEMENT (Admin) ---- */}
+                <div className="mt-6 space-y-5">
+                  <div className="flex items-center gap-3 border-t border-white/5 pt-5">
+                    <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center border border-sky-500/20">
+                      <Pill className="w-4 h-4 text-sky-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-white text-sm Outfit">Catálogo de Inventario</h4>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Gestiona el stock y agrega nuevos medicamentos al sistema.</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Add Medication Form */}
+                    <div className="lg:col-span-4 glass-panel rounded-2xl p-5 border border-white/5">
+                      <h5 className="font-bold text-white text-xs uppercase tracking-wider mb-4 flex items-center gap-2">
+                        <Plus className="w-3.5 h-3.5 text-sky-400" />
+                        Nuevo Medicamento
+                      </h5>
+                      <form onSubmit={handleCreateMedication} className="space-y-3">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre *</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="Ej. Amoxicilina 500mg"
+                            value={newMedName}
+                            onChange={(e) => setNewMedName(e.target.value)}
+                            className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Categoría *</label>
+                          <select
+                            required
+                            value={newMedCategory}
+                            onChange={(e) => setNewMedCategory(e.target.value)}
+                            className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-300 cursor-pointer"
+                          >
+                            {['Analgésico','Antibiótico','Antiinflamatorio','Antihipertensivo','Anticoagulante','Diurético','Sedante','Broncodilatador','Antiemético','Antidiabético','Oncológico','Otro'].map(c => (
+                              <option key={c} value={c} className="bg-slate-950">{c}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Descripción</label>
+                          <input
+                            type="text"
+                            placeholder="Descripción opcional"
+                            value={newMedDesc}
+                            onChange={(e) => setNewMedDesc(e.target.value)}
+                            className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stock</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={newMedStock}
+                              onChange={(e) => setNewMedStock(e.target.value)}
+                              className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Unidad</label>
+                            <select
+                              value={newMedUnit}
+                              onChange={(e) => setNewMedUnit(e.target.value)}
+                              className="w-full h-9 px-2 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-300 cursor-pointer"
+                            >
+                              {['Cajas','Frascos','Ampollas','Tabletas','Sobres','Unidades'].map(u => (
+                                <option key={u} value={u} className="bg-slate-950">{u}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className="w-full h-10 rounded-lg text-slate-950 font-bold uppercase tracking-wider text-[10px] bg-sky-500 hover:bg-sky-400 transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(14,165,233,0.2)] disabled:opacity-50"
+                        >
+                          <Plus className="w-3.5 h-3.5 stroke-[3px]" />
+                          Agregar al Catálogo
+                        </button>
+                      </form>
+                    </div>
+
+                    {/* Catalog Grid */}
+                    <div className="lg:col-span-8 space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <p className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+                          Medicamentos registrados: <span className="text-sky-400">{medications.length}</span>
+                        </p>
+                        <div className="relative w-full sm:max-w-xs">
+                          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+                          <input
+                            type="text"
+                            placeholder="Buscar medicamento..."
+                            value={medicationSearch}
+                            onChange={(e) => setMedicationSearch(e.target.value)}
+                            className="w-full h-9 pl-9 pr-4 rounded-xl glass-input text-xs border border-white/5 bg-slate-950/40 text-white"
+                          />
+                        </div>
+                      </div>
+
+                      {medications.filter(med =>
+                        med.name.toLowerCase().includes(medicationSearch.toLowerCase()) ||
+                        med.category.toLowerCase().includes(medicationSearch.toLowerCase())
+                      ).length === 0 ? (
+                        <div className="p-12 text-center rounded-xl bg-slate-950/20 border border-dashed border-white/10 text-slate-500 text-xs">
+                          No hay medicamentos en el catálogo.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                          {medications
+                            .filter(med =>
+                              med.name.toLowerCase().includes(medicationSearch.toLowerCase()) ||
+                              med.category.toLowerCase().includes(medicationSearch.toLowerCase())
+                            )
+                            .map((med) => {
+                              const hasStock = med.stock > 0;
+                              return (
+                                <div
+                                  key={med.id}
+                                  className="p-4 rounded-xl bg-slate-950/50 border border-white/5 hover:border-sky-500/20 transition-all duration-300 flex flex-col justify-between gap-3 relative overflow-hidden"
+                                >
+                                  <div className={`absolute top-0 left-0 right-0 h-0.5 ${hasStock ? 'bg-sky-500' : 'bg-rose-500'}`} />
+                                  <div>
+                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                      <span className="font-extrabold text-xs text-white truncate leading-tight">{med.name}</span>
+                                      <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-sky-950/80 border border-sky-400/20 text-sky-400 shrink-0">{med.category}</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 italic truncate">{med.description || 'Sin descripción'}</p>
+                                  </div>
+                                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={() => handleUpdateStock(med.id, med.stock, -1)}
+                                        className="w-6 h-6 rounded-md bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-400 font-black text-sm flex items-center justify-center cursor-pointer transition-all"
+                                        title="Reducir stock"
+                                      >−</button>
+                                      <span className={`text-xs font-black ${hasStock ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        {med.stock} <span className="text-[9px] font-normal text-slate-500">{med.unit}</span>
+                                      </span>
+                                      <button
+                                        onClick={() => handleUpdateStock(med.id, med.stock, 1)}
+                                        className="w-6 h-6 rounded-md bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/20 text-sky-400 font-black text-sm flex items-center justify-center cursor-pointer transition-all"
+                                        title="Aumentar stock"
+                                      >+</button>
+                                    </div>
+                                    <button
+                                      onClick={() => handleDeleteMedication(med.id)}
+                                      className="w-6 h-6 rounded-md bg-rose-500/5 hover:bg-rose-500/15 border border-rose-500/10 text-rose-500 flex items-center justify-center cursor-pointer transition-all"
+                                      title="Eliminar medicamento"
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
+              </div>
               )}
 
             </div>
@@ -5118,9 +6464,21 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Patient History Modal */}
-      {showHistoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+      {renderPortalModals()}
+
+      {/* Admin Footer */}
+      <footer className="mt-12 py-6 border-t border-white/5 text-center text-xs text-slate-500">
+        <p>&copy; {new Date().getFullYear()} Aozora Care-Flow. Modo Administración ({session.role}).</p>
+      </footer>
+    </div>
+  );
+
+  function renderPortalModals() {
+    return (
+      <>
+        {/* Patient History Modal */}
+        {showHistoryModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
           <div className="w-full max-w-4xl glass-panel rounded-2xl p-6 sm:p-8 max-h-[85vh] overflow-y-auto relative border border-indigo-500/20 shadow-2xl">
             
             {/* Header */}
@@ -5154,7 +6512,7 @@ export default function DashboardPage() {
               <div className="space-y-6">
                 
                 {/* Statistics Summary */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="p-4 rounded-xl bg-slate-900/40 border border-white/5 text-center">
                     <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Total Visitas</p>
                     <p className="text-2xl font-extrabold text-white mt-1">{patientHistory.length}</p>
@@ -5174,7 +6532,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* History Log Timeline/Table */}
-                <div className="rounded-xl border border-white/5 overflow-hidden">
+                <div className="rounded-xl border border-white/5 overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-slate-950/40 border-b border-white/5 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
@@ -5297,13 +6655,21 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-extrabold text-white Outfit">Expediente Clínico de Enfermería</h3>
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
                     <span className="text-[10px] text-indigo-400 font-bold bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 flex items-center gap-1 uppercase">
                       <Bed className="w-3.5 h-3.5" /> Hab: {selectedVisitForNurse.destination}
                     </span>
                     <span className="text-xs text-slate-400 font-medium">
                       Paciente: <strong className="text-white">{selectedVisitForNurse.patientName}</strong>
                     </span>
+                    {selectedVisitForNurse.age && <span className="text-xs text-slate-400">• Edad: <strong className="text-white">{selectedVisitForNurse.age} años</strong></span>}
+                    {selectedVisitForNurse.gender && <span className="text-xs text-slate-400">• Sexo: <strong className="text-white">{selectedVisitForNurse.gender}</strong></span>}
+                    {selectedVisitForNurse.allergies && <span className="text-xs text-rose-450">• Alergias: <strong className="text-rose-400">{selectedVisitForNurse.allergies}</strong></span>}
+                    {selectedVisitForNurse.chronicConditions && <span className="text-xs text-amber-450">• Crónicas: <strong className="text-amber-400">{selectedVisitForNurse.chronicConditions}</strong></span>}
+                    {selectedVisitForNurse.currentMedications && <span className="text-xs text-sky-450">• Medicación Actual: <strong className="text-sky-400">{selectedVisitForNurse.currentMedications}</strong></span>}
+                    {selectedVisitForNurse.lastMenstrualPeriod && (
+                      <span className="text-xs text-purple-405">• FUM: <strong className="text-purple-300">{new Date(selectedVisitForNurse.lastMenstrualPeriod).toLocaleDateString()}</strong></span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -5434,10 +6800,126 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="p-8 rounded-2xl bg-slate-950/20 border border-dashed border-white/5 text-center flex flex-col items-center justify-center gap-2">
-                    <Users className="w-8 h-8 text-slate-700" />
-                    <p className="text-xs text-slate-500">Aún no hay visitas registradas para este paciente.</p>
+                    <Users className="w-8 h-8 text-slate-750" />
+                    <p className="text-xs text-slate-500 font-medium">Aún no hay visitas registradas para este paciente.</p>
                   </div>
                 )}
+
+                {/* Clinical Analyses Section */}
+                <div className="space-y-4 pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                    <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5 animate-pulse" /> Análisis Clínicos ({clinicalAnalyses.filter(a => a.visitId === selectedVisitForNurse.id).length})
+                    </h4>
+                    <button
+                      onClick={() => {
+                        setSelectedVisitForAnalysis(selectedVisitForNurse);
+                        setNewAnalysisName('');
+                        setNewAnalysisScheduledAt(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16));
+                        setNewAnalysisNotes('');
+                        setShowAnalysisModal(true);
+                      }}
+                      className="h-6 px-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[9px] font-bold uppercase tracking-wider transition-all duration-350 cursor-pointer flex items-center gap-1 shadow-[0_0_8px_rgba(99,102,241,0.2)]"
+                    >
+                      <Plus className="w-2.5 h-2.5" />
+                      Solicitar
+                    </button>
+                  </div>
+
+                  {(() => {
+                    const patientAnalyses = clinicalAnalyses.filter(a => a.visitId === selectedVisitForNurse.id);
+                    if (patientAnalyses.length === 0) {
+                      return (
+                        <div className="p-6 rounded-2xl bg-slate-950/20 border border-dashed border-white/5 text-center flex flex-col items-center justify-center gap-1.5 animate-fadeIn">
+                          <Activity className="w-6 h-6 text-slate-750" />
+                          <p className="text-[10px] text-slate-500 font-medium">No se han solicitado análisis clínicos para este paciente.</p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="space-y-3 max-h-[35vh] overflow-y-auto pr-1 animate-fadeIn">
+                        {patientAnalyses.map(analysis => {
+                          const statusColors = {
+                            solicitado: 'bg-yellow-500/10 border-yellow-500/20 text-yellow-405',
+                            realizado: 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400',
+                            'no realizado': 'bg-rose-500/10 border-rose-500/20 text-rose-450',
+                            reprogramado: 'bg-purple-500/10 border-purple-500/20 text-purple-405'
+                          };
+                          const badgeColor = statusColors[analysis.status] || 'bg-slate-800 text-slate-400';
+                          const isUpcoming = ['solicitado', 'reprogramado'].includes(analysis.status);
+
+                          return (
+                            <div key={analysis.id} className="p-3.5 rounded-xl bg-slate-950/40 border border-white/5 space-y-2 hover:border-indigo-500/10 transition-all duration-350 text-xs text-left">
+                              <div className="flex justify-between items-start gap-1">
+                                <span className="font-extrabold text-[11px] text-white leading-snug">{analysis.name}</span>
+                                <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded border ${badgeColor}`}>
+                                  {analysis.status}
+                                </span>
+                              </div>
+                              
+                              <div className="text-[9px] text-slate-400 space-y-1">
+                                <p>Programado: <span className="text-slate-350 font-semibold">{new Date(analysis.scheduledAt).toLocaleString()}</span></p>
+                                {analysis.notes && <p className="italic text-slate-500">"{analysis.notes}"</p>}
+                              </div>
+
+                              {analysis.status === 'realizado' && analysis.results && (
+                                <div className="mt-1.5 p-2 rounded bg-emerald-950/20 border border-emerald-500/5 text-[9px] space-y-1">
+                                  <p className="font-bold text-emerald-400 uppercase tracking-wider">RESULTADOS:</p>
+                                  <p className="text-slate-300 font-medium">"{analysis.results}"</p>
+                                  {analysis.incidences && (
+                                    <p className="text-slate-450 mt-1"><strong className="text-rose-450">Incidencias:</strong> {analysis.incidences}</p>
+                                  )}
+                                  {analysis.pdfUrl && (
+                                    <div className="mt-1.5 pt-1.5 border-t border-emerald-500/10 flex items-center">
+                                      <a 
+                                        href={analysis.pdfUrl} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
+                                      >
+                                        <FileText className="w-2.5 h-2.5" />
+                                        Ver PDF Completo
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {analysis.status === 'no realizado' && analysis.notDoneReason && (
+                                <div className="mt-1.5 p-2 rounded bg-rose-950/20 border border-rose-500/5 text-[9px]">
+                                  <p className="font-bold text-rose-400 uppercase tracking-wider">NO REALIZADO:</p>
+                                  <p className="text-slate-350 italic">"{analysis.notDoneReason}"</p>
+                                </div>
+                              )}
+
+                              {isUpcoming && (
+                                <button
+                                  onClick={() => {
+                                    setSelectedAnalysisForReview(analysis);
+                                    setReviewStatus(analysis.status === 'solicitado' ? 'realizado' : analysis.status);
+                                    setReviewResults(analysis.results || '');
+                                    setReviewNotes(analysis.notes || '');
+                                    setReviewIncidences(analysis.incidences || '');
+                                    setReviewNotDoneReason(analysis.notDoneReason || '');
+                                    setReviewRescheduledTo('');
+                                    setReviewRescheduledReason('');
+                                    setReviewPdfUrl(analysis.pdfUrl || '');
+                                    setShowReviewAnalysisModal(true);
+                                  }}
+                                  className="w-full h-7 mt-2 rounded bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/15 text-indigo-400 text-[9px] font-bold uppercase tracking-wider transition-all duration-300 cursor-pointer flex items-center justify-center gap-1"
+                                >
+                                  <Edit className="w-2.5 h-2.5" />
+                                  Registrar Estado
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+
               </div>
 
             </div>
@@ -5495,6 +6977,31 @@ export default function DashboardPage() {
                 <label className="block text-xs font-semibold text-slate-350 uppercase tracking-wider mb-1.5">
                   Medicamentos / Soluciones Administradas <span className="text-indigo-400">*</span>
                 </label>
+                {medications.length > 0 && (
+                  <div className="mb-2">
+                    <p className="text-[10px] text-slate-500 mb-1.5 flex items-center gap-1">
+                      <Pill className="w-3 h-3 text-sky-400" />
+                      Seleccionar del catálogo de farmacia ({medications.length} disponibles)
+                    </p>
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          setNewMedicines(prev => prev ? prev + '\n' + val : val);
+                          e.target.value = '';
+                        }
+                      }}
+                      className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-300 cursor-pointer"
+                    >
+                      <option value="">-- Seleccionar medicamento del catálogo --</option>
+                      {medications.map(med => (
+                        <option key={med.id} value={med.name} className="bg-slate-950 text-white">
+                          {med.name} ({med.category}) — Stock: {med.stock} {med.unit}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <textarea
                   required
                   rows="3"
@@ -5532,6 +7039,65 @@ export default function DashboardPage() {
                   onChange={(e) => setNewLoggedAt(e.target.value)}
                   className="w-full h-11 px-4 rounded-lg glass-input text-xs"
                 />
+              </div>
+
+              {/* Scheduled Medication Reminder Optional Block */}
+              <div className="p-4 rounded-xl border border-indigo-500/10 bg-indigo-500/5 space-y-4">
+                <label className="flex items-center gap-2 text-xs font-bold text-indigo-400 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={reminderEnabled} 
+                    onChange={(e) => {
+                      setReminderEnabled(e.target.checked);
+                      if (e.target.checked && newMedicines) {
+                        setReminderMedName(newMedicines.split('\n')[0] || '');
+                      }
+                    }}
+                    className="rounded border-slate-700 bg-slate-950/40 text-indigo-500 cursor-pointer"
+                  />
+                  🔔 ¿Programar recordatorio periódico para medicamento?
+                </label>
+                
+                {reminderEnabled && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 animate-fadeIn">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Medicamento a Recordar</label>
+                      <select
+                        value={reminderMedName}
+                        onChange={(e) => setReminderMedName(e.target.value)}
+                        required
+                        className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-350"
+                      >
+                        <option value="">-- Seleccionar --</option>
+                        {medications.map(med => (
+                          <option key={med.id} value={med.name} className="bg-slate-950 text-white">
+                            {med.name}
+                          </option>
+                        ))}
+                        {newMedicines && newMedicines.split('\n').filter(Boolean).map((typedMed, index) => (
+                          <option key={`typed-${index}`} value={typedMed} className="bg-slate-950 text-white">
+                            {typedMed} (Escrito arriba)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Frecuencia / Intervalo</label>
+                      <select
+                        value={reminderInterval}
+                        onChange={(e) => setReminderInterval(parseInt(e.target.value, 10))}
+                        required
+                        className="w-full h-9 px-3 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-350"
+                      >
+                        <option value={4}>Cada 4 horas</option>
+                        <option value={6}>Cada 6 horas</option>
+                        <option value={8}>Cada 8 horas</option>
+                        <option value={12}>Cada 12 horas</option>
+                        <option value={24}>Cada 24 horas (diario)</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
@@ -5838,10 +7404,433 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Admin Footer */}
-      <footer className="mt-12 py-6 border-t border-white/5 text-center text-xs text-slate-500">
-        <p>&copy; {new Date().getFullYear()} Aozora Care-Flow. Modo Administración ({session.role}).</p>
-      </footer>
-    </div>
-  );
+      {/* MODAL: SOLICITAR ANÁLISIS CLÍNICO */}
+      {showAnalysisModal && selectedVisitForAnalysis && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-md glass-panel rounded-2xl p-6 relative border border-indigo-500/20 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4 text-left">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-indigo-400" />
+                Solicitar Análisis Clínico
+              </h3>
+              <button 
+                onClick={() => setShowAnalysisModal(false)}
+                className="text-slate-400 hover:text-white text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleCreateAnalysis} className="space-y-4 text-xs text-left">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Paciente</label>
+                <input
+                  type="text"
+                  disabled
+                  value={`${selectedVisitForAnalysis.patientName} (${selectedVisitForAnalysis.destination})`}
+                  className="w-full h-10 px-3 rounded-lg glass-input bg-slate-950/60 text-slate-400 border border-white/5 cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Nombre del Estudio / Análisis <span className="text-indigo-400">*</span></label>
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      setNewAnalysisName(e.target.value);
+                    }
+                  }}
+                  className="w-full mb-2 p-2.5 rounded-lg glass-input text-xs border border-white/5 bg-slate-950/40 text-slate-350 cursor-pointer"
+                >
+                  <option value="">-- Sugerencias de Estudios Comunes --</option>
+                  <option value="Biometría Hemática Completa">Biometría Hemática Completa (BHC)</option>
+                  <option value="Química Sanguínea de 6 Elementos">Química Sanguínea de 6 Elementos (QS6)</option>
+                  <option value="Examen General de Orina">Examen General de Orina (EGO)</option>
+                  <option value="Radiografía de Tórax AP/Lateral">Radiografía de Tórax AP/Lateral</option>
+                  <option value="Electrocardiograma de 12 Derivaciones">Electrocardiograma de 12 Derivaciones (EKG)</option>
+                  <option value="Gasometría Arterial">Gasometría Arterial (GA)</option>
+                  <option value="Perfil Hepático Completo">Perfil Hepático Completo</option>
+                  <option value="Ultrasonido Abdominal">Ultrasonido Abdominal</option>
+                  <option value="Tomografía Computarizada (TAC) Simple">Tomografía Computarizada (TAC) Simple</option>
+                </select>
+                
+                <input
+                  type="text"
+                  required
+                  placeholder="O escribe otro estudio personalizado..."
+                  value={newAnalysisName}
+                  onChange={(e) => setNewAnalysisName(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Fecha y Hora Programada <span className="text-indigo-400">*</span></label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={newAnalysisScheduledAt}
+                  onChange={(e) => setNewAnalysisScheduledAt(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg glass-input text-white animate-fadeIn"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Indicaciones / Preparación Especial</label>
+                <textarea
+                  rows="3"
+                  placeholder="Ej. Ayuno de 8 horas, suspender anticoagulantes..."
+                  value={newAnalysisNotes}
+                  onChange={(e) => setNewAnalysisNotes(e.target.value)}
+                  className="w-full p-3 rounded-lg glass-input text-white resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAnalysisModal(false)}
+                  className="flex-1 h-10 rounded-lg border border-slate-700 bg-slate-900/40 text-slate-400 hover:text-white font-bold uppercase tracking-wider text-[10px] cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold uppercase tracking-wider text-[10px] cursor-pointer shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                >
+                  Confirmar Solicitud
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: ACTUALIZAR ESTADO / REGISTRAR RESULTADOS DE ANÁLISIS */}
+      {showReviewAnalysisModal && selectedAnalysisForReview && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-full max-w-md glass-panel rounded-2xl p-6 relative border border-indigo-500/20 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4 text-left">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Edit className="w-4 h-4 text-indigo-400" />
+                Registrar Resultados / Estado
+              </h3>
+              <button 
+                onClick={() => setShowReviewAnalysisModal(false)}
+                className="text-slate-400 hover:text-white text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateAnalysis} className="space-y-4 text-xs text-left">
+              <div className="bg-slate-950/60 p-3 rounded-lg border border-white/5 space-y-1">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Estudio Solicitado:</p>
+                <p className="text-white font-bold text-sm leading-tight">{selectedAnalysisForReview.name}</p>
+                <p className="text-[10px] text-indigo-400">Paciente: {selectedAnalysisForReview.visit?.patientName}</p>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Nuevo Estado del Estudio <span className="text-indigo-400">*</span></label>
+                <select
+                  value={reviewStatus}
+                  onChange={(e) => setReviewStatus(e.target.value)}
+                  className="w-full h-10 px-3 rounded-lg glass-input text-slate-200 cursor-pointer"
+                >
+                  <option value="realizado">Estudio Realizado (Cargar Resultados)</option>
+                  <option value="no realizado">No Realizado (Especificar Motivo)</option>
+                  <option value="reprogramado">Reprogramar (Establecer Nueva Fecha)</option>
+                </select>
+              </div>
+
+              {reviewStatus === 'realizado' && (
+                <div className="space-y-4 animate-fadeIn">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Resultados Clínicos / Informe <span className="text-indigo-400">*</span></label>
+                    <textarea
+                      required
+                      rows="4"
+                      placeholder="Escribe el resultado del análisis (Ej: Hemoglobina 14.2 g/dL, Leucocitos 8,500/uL...)"
+                      value={reviewResults}
+                      onChange={(e) => setReviewResults(e.target.value)}
+                      className="w-full p-3 rounded-lg glass-input text-white resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Incidencias / Notas de Laboratorio</label>
+                    <textarea
+                      rows="2"
+                      placeholder="Ej. Paciente refirió dolor de cabeza leve, muestra tomada sin contratiempos..."
+                      value={reviewIncidences}
+                      onChange={(e) => setReviewIncidences(e.target.value)}
+                      className="w-full p-3 rounded-lg glass-input text-white resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Enlace a PDF / Reporte Completo (Opcional)</label>
+                    <input
+                      type="url"
+                      placeholder="https://ejemplo.com/estudios/reporte-biometria.pdf"
+                      value={reviewPdfUrl}
+                      onChange={(e) => setReviewPdfUrl(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {reviewStatus === 'no realizado' && (
+                <div className="space-y-4 animate-fadeIn">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Motivo de No Realización <span className="text-rose-450">*</span></label>
+                    <textarea
+                      required
+                      rows="3"
+                      placeholder="Ej. Paciente no cumplió con el ayuno de 8 horas requerido, rechazo del paciente..."
+                      value={reviewNotDoneReason}
+                      onChange={(e) => setReviewNotDoneReason(e.target.value)}
+                      className="w-full p-3 rounded-lg glass-input text-white resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {reviewStatus === 'reprogramado' && (
+                <div className="space-y-4 animate-fadeIn">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Nueva Fecha y Hora de Programación <span className="text-indigo-400">*</span></label>
+                    <input
+                      type="datetime-local"
+                      required
+                      value={reviewRescheduledTo}
+                      onChange={(e) => setReviewRescheduledTo(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Motivo de Reprogramación <span className="text-indigo-400">*</span></label>
+                    <textarea
+                      required
+                      rows="3"
+                      placeholder="Ej. Equipo de rayos X en mantenimiento, reprogramado a solicitud del paciente..."
+                      value={reviewRescheduledReason}
+                      onChange={(e) => setReviewRescheduledReason(e.target.value)}
+                      className="w-full p-3 rounded-lg glass-input text-white resize-none"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowReviewAnalysisModal(false)}
+                  className="flex-1 h-10 rounded-lg border border-slate-700 bg-slate-900/40 text-slate-400 hover:text-white font-bold uppercase tracking-wider text-[10px] cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 h-10 rounded-lg bg-indigo-650 hover:bg-indigo-550 text-white font-bold uppercase tracking-wider text-[10px] cursor-pointer shadow-[0_0_15px_rgba(99,102,241,0.2)]"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EDITAR INFORMACIÓN COMPLETA DEL PACIENTE */}
+      {showEditPatientModal && editingPatient && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+          <div className="w-full max-w-2xl glass-panel rounded-2xl p-6 relative border border-emerald-500/20 shadow-2xl text-left my-8 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-white/5 pb-4 mb-4">
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Edit className="w-4 h-4 text-emerald-450" />
+                Editar Expediente y Ficha del Paciente
+              </h3>
+              <button 
+                onClick={() => { setShowEditPatientModal(false); setEditingPatient(null); }}
+                className="text-slate-400 hover:text-white text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleSavePatientEdit} className="space-y-6 text-xs text-left">
+              {/* Sección 1: Datos Básicos */}
+              <div>
+                <h4 className="text-[10px] font-bold text-emerald-450 uppercase tracking-widest mb-3 pb-1 border-b border-white/5">1. Datos Generales de Registro</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre Completo <span className="text-rose-450">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Juan Pérez"
+                      value={editPatientName}
+                      onChange={(e) => setEditPatientName(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Correo Electrónico</label>
+                    <input
+                      type="email"
+                      placeholder="ejemplo@correo.com"
+                      value={editPatientEmail}
+                      onChange={(e) => setEditPatientEmail(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Teléfono</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 5512345678"
+                      value={editPatientPhone}
+                      onChange={(e) => setEditPatientPhone(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Destino / Habitación / Consultorio <span className="text-rose-450">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Consultorio 101, Habitación 204"
+                      value={editPatientDestination}
+                      onChange={(e) => setEditPatientDestination(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Motivo de Consulta/Ingreso <span className="text-rose-450">*</span></label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Control prenatal, dolor abdominal"
+                      value={editPatientReason}
+                      onChange={(e) => setEditPatientReason(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Acompañante / Familiar Responsable</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. María Pérez (Esposa)"
+                      value={editPatientCompanion}
+                      onChange={(e) => setEditPatientCompanion(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección 2: Ficha Clínica y Antecedentes */}
+              <div>
+                <h4 className="text-[10px] font-bold text-emerald-450 uppercase tracking-widest mb-3 pb-1 border-b border-white/5">2. Antecedentes Clínicos y Ficha Médica</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Edad (Años)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="150"
+                      placeholder="Ej. 28"
+                      value={editPatientAge}
+                      onChange={(e) => setEditPatientAge(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sexo / Género</label>
+                    <select
+                      value={editPatientGender}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setEditPatientGender(val);
+                        if (val !== 'Femenino') {
+                          setEditPatientLastMenstrualPeriod('');
+                        }
+                      }}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-slate-200 border border-white/5 bg-slate-950/40 cursor-pointer"
+                    >
+                      <option value="">Selecciona sexo...</option>
+                      <option value="Femenino">Femenino</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Otro">Otro / No especificado</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Condiciones Especiales o Crónicas (Ej. Diabetes, Hipertensión...)</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Diabetes Mellitus tipo 2"
+                      value={editPatientChronicConditions}
+                      onChange={(e) => setEditPatientChronicConditions(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Alergias Conocidas</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Penicilina, mariscos"
+                      value={editPatientAllergies}
+                      onChange={(e) => setEditPatientAllergies(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Medicamentos que toma actualmente</label>
+                    <textarea
+                      rows="2"
+                      placeholder="Ej. Metformina 850mg c/12h, Losartán 50mg diario..."
+                      value={editPatientCurrentMedications}
+                      onChange={(e) => setEditPatientCurrentMedications(e.target.value)}
+                      className="w-full p-3 rounded-lg glass-input text-white resize-none border border-white/5 bg-slate-950/40"
+                    />
+                  </div>
+                  {editPatientGender === 'Femenino' && (
+                    <div className="sm:col-span-2 animate-fadeIn">
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Última Fecha de Menstruación (FUM)</label>
+                      <input
+                        type="date"
+                        value={editPatientLastMenstrualPeriod}
+                        onChange={(e) => setEditPatientLastMenstrualPeriod(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg glass-input text-white border border-white/5 bg-slate-950/40"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex gap-3 pt-4 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => { setShowEditPatientModal(false); setEditingPatient(null); }}
+                  className="flex-1 h-10 rounded-lg border border-slate-700 bg-slate-900/40 text-slate-400 hover:text-white font-bold uppercase tracking-wider text-[10px] cursor-pointer transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 h-10 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-slate-950 font-bold uppercase tracking-wider text-[10px] cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-colors"
+                >
+                  {loading ? 'Guardando...' : 'Guardar Ficha / Expediente'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      </>
+    );
+  }
 }

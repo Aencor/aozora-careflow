@@ -289,6 +289,8 @@
     .pillar-medico .pillar-icon { color: var(--secondary); }
     .pillar-enfermera .pillar-icon { color: #a855f7; }
     .pillar-admin .pillar-icon { color: #14b8a6; }
+    .pillar-farmaco .pillar-icon { color: #38bdf8; }
+    .pillar-farmaco { border-left-color: #38bdf8; }
 
     .pillar-title {
       font-family: 'Outfit', sans-serif;
@@ -524,7 +526,9 @@
           <strong>Aozora</strong> significa <em>"Cielo Azul"</em> en japonés, representando esperanza, claridad y un mañana brillante y despejado.
           <br><br>
           Este proyecto nace de una experiencia personal profunda: un momento de extrema vulnerabilidad cuando el hijo de nuestro fundador enfrentó complicaciones críticas al nacer en un hospital debido a fallas de comunicación y la falta de trazabilidad clínica en tiempo real. 
-          De por sí, la estancia en un hospital es un momento sumamente difícil de incertidumbre y dolor para cualquier familia; añadir errores administrativos o vacíos en el seguimiento clínico agrava esa carga de forma innecesaria.
+          Además del inmenso peligro para el bebé, la falta de coordinación y control en los accesos y los relevos clínicos resultó en <strong>graves secuelas y complicaciones médicas severas principalmente para la madre</strong>. Estas fallas clínicas y administrativas no solo pusieron en riesgo su vida y salud física, sino que <strong>afectaron profundamente su salud mental y bienestar emocional</strong> debido a la negligencia comunicativa. Es una experiencia sumamente difícil y dolorosa que dejó marcas imborrables.
+          <br><br>
+          De por sí, la estancia en un hospital es un momento de incertidumbre y dolor para cualquier familia; añadir errores de seguimiento o vacíos en el registro clínico agrava esa carga de forma intolerable. Es una vivencia traumática que <strong>no quisiéramos que se repitiera jamás para ninguna madre ni para ningún paciente</strong>.
           <br><br>
           <strong>Aozora Care-Flow</strong> fue concebido bajo una promesa solemne: transformar la tecnología de gestión hospitalaria para que ninguna otra familia tenga que atravesar incidentes previsibles debido a la falta de coordinación. Es un ecosistema diseñado con profundo respeto y rigor técnico, con el único fin de salvaguardar la seguridad operativa del paciente, facilitando una estancia hospitalaria transparente, segura y libre de errores humanos.
         </p>
@@ -645,6 +649,19 @@
             <li><strong>Métricas de desempeño</strong>: tiempos de estancia promedio y horas de mayor afluencia.</li>
           </ul>
         </div>
+        <!-- Pilar E: FARMACIA -->
+        <div class="pillar-card pillar-farmaco">
+          <div class="pillar-header">
+            <i class="fa-solid fa-pills pillar-icon"></i>
+            <span class="pillar-title">🧪 Farmacia Integrada (Inventario y Despacho)</span>
+          </div>
+          <p>Conecta directamente a enfermeros, farmacéuticos y administradores en un flujo trazable de solicitud y entrega de medicamentos.</p>
+          <ul class="bullet-list">
+            <li><strong>Solicitudes automáticas</strong>: La enfermera selecciona del catálogo cuando anota el chequeo clínico y la solicitud llega al farmacéutico al instante.</li>
+            <li><strong>Consola de despacho exclusiva</strong>: El farmacéutico tiene su propio dashboard con cola de pendientes, confirma la entrega y deja sello de hora y nombre.</li>
+            <li><strong>Control de inventario en tiempo real</strong>: Stock actualizado automáticamente, con ajuste manual (+/−) y alerta visual cuando un medicamento se agota.</li>
+          </ul>
+        </div>
       </section>
 
       <!-- SECTION 4: FLUJO DE VIDA -->
@@ -663,6 +680,8 @@
             <div class="flow-step active-indigo">3. Atención Médica (Diagnóstico)</div>
             <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
             <div class="flow-step active-indigo">4. Bitácora Cuidados (Enfermería)</div>
+            <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+            <div class="flow-step" style="border-color: #38bdf8; color: #38bdf8; background: rgba(56,189,248,0.05);">4b. Despacho Farmacia</div>
             <div class="flow-arrow"><i class="fa-solid fa-arrow-right"></i></div>
             <div class="flow-step active-rose">5. Alta y Check-Out (Salida Física)</div>
           </div>
@@ -722,6 +741,15 @@
 
         <div class="demo-step">
           <div class="demo-step-title">
+            <span>🧪 Paso 4b: La Consola de Farmacia en Acción</span>
+            <span class="badge" style="background-color: #38bdf8; color: #020617;">Farmáceutico</span>
+          </div>
+          <p>Inicia sesión como farmacéutico (ej: usuario <code>farmaco1</code> / clave <code>staffpassword</code>) para ver la consola de despacho.</p>
+          <div class="demo-step-action">Muestra cómo la solicitud de medicamento del enfermero aparece en "Pendiente". Haz clic en Despachar y muestra cómo el sistema registra la entrega con hora y nombre automáticamente.</div>
+        </div>
+
+        <div class="demo-step">
+          <div class="demo-step-title">
             <span>📊 Paso 5: Egreso Seguro y Liberación de Aforo</span>
             <span class="badge" style="background-color: var(--danger); color: #fff;">Salida</span>
           </div>
@@ -736,6 +764,7 @@
         <ul class="bullet-list" style="margin-left: 10px;">
           <li><strong>Ahorro del 80% en Tiempos de Entrada:</strong> Registro ágil en solo 15 segundos en lugar de los 3 minutos del sistema manual. En un hospital mediano, esto libera hasta 20 horas de trabajo diarias.</li>
           <li><strong>Cero Papelería:</strong> Eliminación de pases plásticos impresos, libretas de firmas y archivo físico de hojas de observación en urgencias.</li>
+          <li><strong>Control de Inventario Farmacológico:</strong> Elimina el manejo manual de solicitudes de medicamentos en papel. La trazabilidad digital desde la prescripción hasta la entrega reduce errores de dosificación y pérdida de insumos hasta en un 60%.</li>
           <li><strong>Cumplimiento Normativo de Aforos:</strong> Evita multas de protección civil gracias a la telemetría en tiempo real de pacientes presentes.</li>
         </ul>
 
