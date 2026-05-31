@@ -151,30 +151,34 @@ export default function ShowcasePage() {
       <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[350px] h-[350px] bg-teal-500/5 rounded-full blur-[100px] -z-10"></div>
 
       {/* Header */}
-      <header className="glass-panel border-b border-white/5 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:scale-105 transition-transform duration-300">
-              <Activity className="w-6 h-6 text-emerald-400 pulse-glow" />
+      <header className="glass-panel border-b border-white/5 sticky top-0 z-40 bg-[#070b13]/85 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+          
+          {/* Logo Brand */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <Link href="/" className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:scale-105 transition-transform duration-300 shrink-0">
+              <Activity className="w-5.5 h-5.5 text-emerald-400 pulse-glow" />
             </Link>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
                 Aozora <span className="text-emerald-400 font-extrabold font-display">Care-Flow</span>
               </h1>
-              <p className="text-[10px] text-slate-400 uppercase tracking-widest font-semibold flex items-center gap-1">
+              <p className="text-[9px] text-slate-400 uppercase tracking-widest font-semibold hidden md:flex items-center gap-1 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block animate-pulse"></span>
                 Showcase Interactivo y Comercial
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          {/* Back Action Button */}
+          <div className="flex items-center gap-3 shrink-0">
             <Link 
               href="/"
-              className="flex items-center gap-2 px-4 h-10 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800/40 transition-all duration-300"
+              className="inline-flex items-center justify-center h-9 w-9 sm:w-auto sm:px-4 sm:h-10 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 hover:bg-slate-800/40 transition-all duration-300 shrink-0"
+              title="Volver al Portal"
             >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Volver al Portal</span>
+              <ArrowLeft className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline whitespace-nowrap">Volver al Portal</span>
             </Link>
           </div>
         </div>

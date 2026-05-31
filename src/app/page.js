@@ -10,6 +10,7 @@ import {
   Shield, 
   Award,
   Lock,
+  LogIn,
   HeartHandshake,
   CheckCircle2,
   FileText,
@@ -28,36 +29,41 @@ export default function Home() {
       {/* Header */}
       <header className="glass-panel border-b border-white/5 sticky top-0 z-40 bg-[#070b13]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/30 shadow-[0_0_15px_rgba(56,189,248,0.15)]">
+          
+          {/* Logo Brand */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/30 shadow-[0_0_15px_rgba(56,189,248,0.15)] shrink-0">
               <Activity className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-sky-400 animate-pulse" />
             </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1 sm:gap-1.5 font-display">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-1 sm:gap-1.5 font-display whitespace-nowrap">
                 Aozora <span className="text-sky-400 font-extrabold">Care-Flow</span>
               </h1>
-              <p className="text-[8px] sm:text-[9px] text-slate-400 uppercase tracking-widest font-semibold">Trazabilidad & Seguridad Clínica</p>
+              <p className="text-[9px] text-slate-400 uppercase tracking-widest font-semibold hidden md:block mt-0.5">Trazabilidad & Seguridad Clínica</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 sm:gap-4">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Link 
               href="/kiosk"
-              className="hidden sm:inline-flex items-center h-9 px-3 sm:px-4 text-[10px] sm:text-xs font-bold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 transition-all duration-300"
+              className="hidden sm:inline-flex items-center h-9 px-4 text-xs font-bold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 transition-all duration-300 whitespace-nowrap"
             >
               Quiosco Público
             </Link>
  
             <Link 
               href="/login"
-              className="inline-flex items-center h-9 px-2.5 sm:px-4 text-[10px] sm:text-xs font-semibold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 transition-all duration-300"
+              className="inline-flex items-center justify-center h-9 w-9 sm:w-auto sm:px-4 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-900/40 text-slate-300 hover:text-white hover:border-slate-500 transition-all duration-300 shrink-0"
+              title="Acceso Personal"
             >
-              Acceso Personal
+              <LogIn className="w-4 h-4 sm:hidden" />
+              <span className="hidden sm:inline whitespace-nowrap">Acceso Personal</span>
             </Link>
  
             <Link 
               href="/showcase"
-              className="inline-flex items-center h-9 px-2.5 sm:px-4 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider rounded-lg bg-sky-500 text-slate-950 hover:bg-sky-400 transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] glow-btn-sky"
+              className="inline-flex items-center justify-center h-9 px-3 sm:px-4 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider rounded-lg bg-sky-500 text-slate-950 hover:bg-sky-400 transition-all duration-300 shadow-[0_0_15px_rgba(56,189,248,0.25)] glow-btn-sky whitespace-nowrap shrink-0"
             >
               Demo En Vivo
             </Link>
