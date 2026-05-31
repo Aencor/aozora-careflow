@@ -1575,11 +1575,30 @@ export default function ShowcasePage() {
                   <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-bold">SEEDED DATA</span>
                 </div>
                 
-                <div className="space-y-1.5 font-mono">
-                  <p className="text-slate-300 flex justify-between"><span className="text-slate-500">1. Administrador:</span> <span>User: <strong className="text-emerald-400">admin</strong> / Pass: <strong className="text-emerald-400">adminpassword</strong></span></p>
-                  <p className="text-slate-300 flex justify-between"><span className="text-slate-500">2. Médico Pediatra:</span> <span>User: <strong className="text-indigo-400">medico1</strong> / Pass: <strong className="text-indigo-400">doctorpassword</strong></span></p>
-                  <p className="text-slate-300 flex justify-between"><span className="text-slate-500">3. Guardia de Acceso:</span> <span>User: <strong className="text-purple-400">guardia1</strong> / Pass: <strong className="text-purple-400">staffpassword</strong></span></p>
-                  <p className="text-slate-300 flex justify-between"><span className="text-slate-500">4. Farmacéutico:</span> <span>User: <strong className="text-sky-400">farmaco1</strong> / Pass: <strong className="text-sky-400">staffpassword</strong></span></p>
+                <div className="space-y-3 font-mono">
+                  {[
+                    { num: '1', role: 'Administrador', user: 'admin', pass: 'adminpassword', color: 'text-emerald-400' },
+                    { num: '2', role: 'Médico Pediatra', user: 'medico1', pass: 'doctorpassword', color: 'text-indigo-400' },
+                    { num: '3', role: 'Guardia de Acceso', user: 'guardia1', pass: 'staffpassword', color: 'text-purple-400' },
+                    { num: '4', role: 'Farmacéutico', user: 'farmaco1', pass: 'staffpassword', color: 'text-sky-400' }
+                  ].map((cred) => (
+                    <div key={cred.num} className="border-b border-white/5 pb-3 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[10px] bg-slate-900 border border-white/10 w-5 h-5 rounded flex items-center justify-center text-slate-500 font-bold">{cred.num}</span>
+                        <span className="text-slate-300 text-xs font-extrabold uppercase tracking-wide">{cred.role}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pl-7 text-[11px]">
+                        <div className="bg-slate-900/50 p-2 rounded border border-white/[0.03]">
+                          <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider mb-0.5">Usuario</span>
+                          <strong className={`${cred.color} font-semibold`}>{cred.user}</strong>
+                        </div>
+                        <div className="bg-slate-900/50 p-2 rounded border border-white/[0.03] overflow-x-auto">
+                          <span className="text-slate-500 block text-[8px] uppercase font-bold tracking-wider mb-0.5">Contraseña</span>
+                          <strong className={`${cred.color} font-semibold`}>{cred.pass}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

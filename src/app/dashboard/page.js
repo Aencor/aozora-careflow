@@ -1006,14 +1006,14 @@ export default function DashboardPage() {
         )}
 
         {/* Header */}
-        <header className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-slate-950/40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
+        <header className="px-4 sm:px-6 py-4 border-b border-white/5 flex items-center justify-between bg-slate-950/40 backdrop-blur-md sticky top-0 z-40">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_15px_rgba(99,102,241,0.15)] shrink-0">
               <Activity className="w-5.5 h-5.5 text-indigo-400" />
             </div>
-            <div>
-              <h2 className="font-extrabold text-base tracking-wide text-white leading-tight uppercase Outfit">Aozora Care-Flow</h2>
-              <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1.5 font-semibold">
+            <div className="min-w-0">
+              <h2 className="font-extrabold text-sm sm:text-base tracking-wide text-white leading-tight uppercase Outfit whitespace-nowrap">Aozora Care-Flow</h2>
+              <div className="text-[10px] text-slate-400 mt-0.5 hidden md:flex items-center gap-1.5 font-semibold">
                 <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
                 PORTAL GENERAL DE ENFERMERÍA
               </div>
@@ -2057,16 +2057,16 @@ export default function DashboardPage() {
         
         {/* Header */}
         <header className="glass-panel border-b border-white/5 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-                <Stethoscope className="w-6 h-6 text-emerald-400 pulse-glow" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] shrink-0">
+                <Stethoscope className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400 pulse-glow" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+              <div className="min-w-0">
+                <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
                   Portal <span className="text-emerald-400 font-extrabold font-display">Clínico Médico</span>
                 </h1>
-                <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">
+                <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold hidden md:block mt-0.5">
                   {currentDoc ? `${currentDoc.name} • ${currentDoc.specialty}` : 'Médico General'}
                 </p>
               </div>
@@ -3518,14 +3518,14 @@ export default function DashboardPage() {
         )}
 
         {/* Header */}
-        <header className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-slate-950/40 backdrop-blur-md sticky top-0 z-40">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.15)]">
-              <Pill className="w-5.5 h-5.5 text-sky-400" />
+        <header className="px-4 sm:px-6 py-4 border-b border-white/5 flex items-center justify-between bg-slate-950/40 backdrop-blur-md sticky top-0 z-40">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.15)] shrink-0">
+              <Pill className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-sky-400" />
             </div>
-            <div>
-              <h2 className="font-extrabold text-base tracking-wide text-white leading-tight uppercase Outfit">Aozora Care-Flow</h2>
-              <div className="text-[10px] text-sky-400 mt-0.5 flex items-center gap-1.5 font-bold uppercase tracking-wider font-mono">
+            <div className="min-w-0">
+              <h2 className="font-extrabold text-sm sm:text-base tracking-wide text-white leading-tight uppercase Outfit whitespace-nowrap">Aozora Care-Flow</h2>
+              <div className="text-[10px] text-sky-400 mt-0.5 hidden md:flex items-center gap-1.5 font-bold uppercase tracking-wider font-mono">
                 <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
                 Consola de Despacho Farmacéutico
               </div>
@@ -4671,17 +4671,17 @@ export default function DashboardPage() {
 
       {/* Admin Layout Header */}
       <header className="glass-panel border-b border-white/5 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)]">
-              <Activity className="w-6 h-6 text-indigo-400" />
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)] shrink-0">
+              <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-400" />
             </div>
-            <div>
-              <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-1 sm:gap-1.5 whitespace-nowrap">
                 Hospital <span className="text-indigo-400 font-extrabold font-display">Control-Panel</span>
               </h1>
-              <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">Gestión de Seguridad & Operación</p>
+              <p className="text-[9px] text-slate-400 uppercase tracking-widest font-bold hidden md:block mt-0.5">Gestión de Seguridad & Operación</p>
             </div>
           </div>
 
